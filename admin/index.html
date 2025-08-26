@@ -462,18 +462,27 @@ function createInputBlock(container, placeholders, values=[], fileIndices=[]){
 
 
 
-async function saveDynamicSection(containerId, docName){
-  const container=document.getElementById(containerId+"List");
-  const items=[];
-  container.querySelectorAll("div").forEach(div=>{
-    const vals=Array.from(div.querySelectorAll("input[type=text]")).map(i=>i.value);
-    const fileUrls=Array.from(div.querySelectorAll("input[type=hidden]")).map(i=>i.value);
-    const merged = vals.concat(fileUrls);
-    if(merged.some(v=>v)) items.push(merged);
+async function saveDynamicSection(containerId, docName) {
+  const container = document.getElementById(containerId + "List");
+  const items = [];
+
+  container.querySelectorAll("div").forEach(div => {
+    const textInputs = Array.from(div.querySelectorAll("input[type=text]")).map(i => i.value);
+    const hiddenInputs = Array.from(div.querySelectorAll("input[type=hidden]")).map(i => i.value);
+
+    // Combine values into an object instead of nested array
+    if (textInputs.some(v => v) || hiddenInputs.some(v => v)) {
+      items.push({
+        texts: textInputs,
+        files: hiddenInputs
+      });
+    }
   });
-  await setDoc(doc(db,"siteContent",docName), {items}, {merge:true});
-  showToast(containerId+" updated!");
+
+  await setDoc(doc(db, "siteContent", docName), { items }, { merge: true });
+  showToast(containerId + " updated!");
 }
+
 
 
 async function loadNewsletterSubscribers() {
