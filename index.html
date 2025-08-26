@@ -281,6 +281,7 @@ async function loadContent(){
   if(data.contactEmail){
     document.getElementById("contactEmail").textContent=data.contactEmail;
     document.getElementById("contactEmail").href=`mailto:${data.contactEmail}`;
+    document.getElementById("contactNumber").innerText=`${data.contactNumber}`;
   }
 
   const socials=document.getElementById("socialLinks");

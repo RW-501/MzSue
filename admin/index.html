@@ -101,6 +101,8 @@ hr { border-top: 1px solid #eee; }
           <button type="button" class="btn btn-danger btn-sm" id="heroRemoveBtn">Remove</button>
         </div>
       </div>
+      <input id="contactEmail" class="form-control mb-3" placeholder="Contact Email" />
+      <input id="contactNumber" class="form-control mb-3" placeholder="Contact Number" />
 
       <button class="btn btn-success w-100">Save Changes</button>
     </form>
@@ -295,7 +297,7 @@ async function loadGeneral() {
     const d = snap.data();
     
     // Set basic inputs
-    ["artistName", "tagline", "heroImage"].forEach(id => {
+    ["artistName", "tagline", "heroImage", 'contactEmail', 'contactNumber'].forEach(id => {
       if (document.getElementById(id)) document.getElementById(id).value = d[id] || "";
     });
 
@@ -313,7 +315,11 @@ document.getElementById("generalForm").addEventListener("submit", async e => {
     name: document.getElementById("artistName").value,
     tagline: document.getElementById("tagline").value,
     bio: quill.root.innerHTML, // save formatted HTML
-    heroImage: document.getElementById("heroImage").value
+    heroImage: document.getElementById("heroImage").value,
+    contactNumber: document.getElementById("contactNumber").value,
+    contactEmail: document.getElementById("contactEmail").value
+    
+    
   };
   await setDoc(doc(db, "siteContent", "main"), data, { merge: true });
   showToast("General info updated!");
