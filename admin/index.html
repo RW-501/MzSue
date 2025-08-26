@@ -320,6 +320,7 @@ async function loadGeneral() {
 document.getElementById("generalForm").addEventListener("submit", async e => {
   e.preventDefault();
   const data = {
+    artistName: document.getElementById("artistName").value,
     name: document.getElementById("artistName").value,
     tagline: document.getElementById("tagline").value,
     bio: quill.root.innerHTML, // save formatted HTML
