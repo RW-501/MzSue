@@ -267,7 +267,6 @@ onAuthStateChanged(auth, user => {
 });
 document.getElementById("logoutBtn").addEventListener("click",()=>signOut(auth));
 
-
 // Initialize Quill
 const quill = new Quill('#bioEditor', {
   theme: 'snow',
@@ -282,19 +281,27 @@ const quill = new Quill('#bioEditor', {
     ]
   }
 });
+
 // ===== Load & Save General Info =====
-async function loadGeneral(){
-  const snap = await getDoc(doc(db,"siteContent","main"));
-  if(snap.exists()){
-    const d=snap.data();
-    ["artistName","tagline","bio","heroImage"].forEach(id=>{
-      if(document.getElementById(id)) document.getElementById(id).value=d[id]||"";
+async function loadGeneral() {
+  const snap = await getDoc(doc(db, "siteContent", "main"));
+  if (snap.exists()) {
+    const d = snap.data();
+    
+    // Set basic inputs
+    ["artistName", "tagline", "heroImage"].forEach(id => {
+      if (document.getElementById(id)) document.getElementById(id).value = d[id] || "";
     });
-          if(data.bio) quill.root.innerHTML = data.bio; // load rich text
-    if(data.heroImage) document.getElementById("heroPreview").src = data.heroImage;
-  
+
+    // Load rich text bio
+    if (d.bio) quill.root.innerHTML = d.bio;
+
+    // Load hero image preview
+    if (d.heroImage) document.getElementById("heroPreview").src = d.heroImage;
   }
 }
+loadGeneral();
+
 document.getElementById("generalForm").addEventListener("submit", async e => {
   e.preventDefault();
   const data = {
