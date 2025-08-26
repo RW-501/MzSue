@@ -155,11 +155,19 @@ section h2.visible { opacity:1; transform: translateY(0); }
   <div class="container text-center">
     <h2 class="fw-bold mb-4">Contact & Newsletter</h2>
     <p>Email: <a id="contactEmail" href="#">Loading...</a></p>
+    <p>Number: <input id="contactNumber" type="tel">Loading...</p>
     <div id="socialLinks" class="d-flex flex-wrap justify-content-center gap-2 mt-3"></div>
-    <form id="newsletter" class="mt-4">
-      <input type="email" placeholder="Enter your email" required>
-      <button type="submit" class="btn btn-primary">Subscribe</button>
-    </form>
+
+<form id="newsletter" class="mt-4 p-3 border rounded bg-light">
+  <div class="mb-2">
+    <input type="text" id="newsletterName" class="form-control" placeholder="Enter your name" required>
+  </div>
+  <div class="mb-2">
+    <input type="email" id="newsletterEmail" class="form-control" placeholder="Enter your email" required>
+  </div>
+  <button type="submit" class="btn btn-primary w-100">Subscribe</button>
+</form>
+
   </div>
 </section>
 
@@ -332,6 +340,34 @@ socialsData.forEach(s => {
   animateCounter('videosCounter',videos.length);
   animateCounter('eventsCounter',events.length);
 }
+
+
+document.getElementById("newsletter").addEventListener("submit", async (e) => {
+  e.preventDefault();
+
+  const name = document.getElementById("newsletterName").value.trim();
+  const email = document.getElementById("newsletterEmail").value.trim();
+
+  if (!name || !email) {
+    showToast("Please enter both name and email", "danger");
+    return;
+  }
+
+  try {
+    // Example: save to Firestore under a "newsletter" collection
+    await setDoc(doc(db, "newsletter", email), {
+      name,
+      email,
+      subscribedAt: new Date().toISOString()
+    });
+
+    showToast("Thank you for subscribing, " + name + "!");
+    document.getElementById("newsletter").reset();
+  } catch (err) {
+    console.error(err);
+    showToast("Subscription failed: " + err.message, "danger");
+  }
+});
 
 window.addEventListener('load',()=>document.getElementById('hero').classList.add('visible'));
 loadContent();

@@ -54,6 +54,7 @@ hr { border-top: 1px solid #eee; }
   <a href="#" data-section="events">📅 Events</a>
   <a href="#" data-section="socials">🌍 Social Links</a>
   <a href="#" data-section="gallery">🖼 Image Gallery</a>
+  <a href="#" data-section="contacts">🌍 Contacts</a>
   <a href="#" id="logoutBtn">🚪 Logout</a>
 </div>
 
@@ -156,7 +157,23 @@ hr { border-top: 1px solid #eee; }
       <button type="submit" class="btn btn-success mt-2 w-100">Save Gallery</button>
     </form>
 
-  </div>
+        <!-- Contacts -->
+<div id="newsletterSection" class="card p-4 mb-4 d-none">
+  <h4>Newsletter Subscribers</h4>
+  <table class="table table-striped">
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Email</th>
+        <th>Subscribed At</th>
+      </tr>
+    </thead>
+    <tbody id="newsletterTableBody">
+      <tr><td colspan="3">Loading...</td></tr>
+    </tbody>
+  </table>
+</div>
+
 </main>
 
 <footer class="bg-white mt-5 p-4 text-center shadow-sm rounded"> 
@@ -447,25 +464,81 @@ async function saveDynamicSection(containerId, docName){
   showToast(containerId+" updated!");
 }
 
-// Load all sections
-async function loadAllSections(){
-  const sections=["albums","videos","events","socials","gallery"];
-  for(const sec of sections){
-    const snap=await getDoc(doc(db,"siteContent",sec));
-    const items=snap.exists()? snap.data().items||[] : [];
-    const container=document.getElementById(sec+"List");
-    container.innerHTML="";
-    let placeholders=[], fileIndices=[];
-    switch(sec){
-      case "albums": placeholders=["Album Title","Cover Image","Link"]; fileIndices=[1]; break;
-      case "videos": placeholders=["Video Title","Embed URL"]; fileIndices=[]; break;
-      case "events": placeholders=["Event Name","Date","Venue","Flyer Image"]; fileIndices=[3]; break;
-      case "socials": placeholders=["Platform","URL"]; fileIndices=[]; break;
-      case "gallery": placeholders=["Image","Caption"]; fileIndices=[0]; break;
+
+async function loadNewsletterSubscribers() {
+  const tbody = document.getElementById("newsletterTableBody");
+  tbody.innerHTML = "<tr><td colspan='3'>Loading...</td></tr>";
+
+  try {
+    const snap = await getDocs(collection(db, "newsletter"));
+    if (snap.empty) {
+      tbody.innerHTML = "<tr><td colspan='3'>No subscribers yet.</td></tr>";
+      return;
     }
-    items.forEach(vals=>createInputBlock(container,placeholders,vals,fileIndices));
+
+    let rows = "";
+    snap.forEach(docSnap => {
+      const d = docSnap.data();
+      rows += `
+        <tr>
+          <td>${d.name || ""}</td>
+          <td>${d.email || ""}</td>
+          <td>${new Date(d.subscribedAt).toLocaleString()}</td>
+        </tr>
+      `;
+    });
+
+    tbody.innerHTML = rows;
+  } catch (err) {
+    console.error(err);
+    tbody.innerHTML = `<tr><td colspan="3" class="text-danger">Error loading subscribers</td></tr>`;
   }
 }
+
+// Load all sections
+async function loadAllSections() {
+  const sections = ["albums", "videos", "events", "socials", "gallery", "contacts"];
+
+  for (const sec of sections) {
+    if (sec === "contacts") {
+      // Special case: load subscribers table
+      await loadNewsletterSubscribers();
+      continue; // skip the rest of the loop for contacts
+    }
+
+    const snap = await getDoc(doc(db, "siteContent", sec));
+    const items = snap.exists() ? snap.data().items || [] : [];
+    const container = document.getElementById(sec + "List");
+    container.innerHTML = "";
+
+    let placeholders = [], fileIndices = [];
+    switch (sec) {
+      case "albums":
+        placeholders = ["Album Title", "Cover Image", "Link"];
+        fileIndices = [1];
+        break;
+      case "videos":
+        placeholders = ["Video Title", "Embed URL"];
+        fileIndices = [];
+        break;
+      case "events":
+        placeholders = ["Event Name", "Date", "Venue", "Flyer Image"];
+        fileIndices = [3];
+        break;
+      case "socials":
+        placeholders = ["Platform", "URL"];
+        fileIndices = [];
+        break;
+      case "gallery":
+        placeholders = ["Image", "Caption"];
+        fileIndices = [0];
+        break;
+    }
+
+    items.forEach(vals => createInputBlock(container, placeholders, vals, fileIndices));
+  }
+}
+
 
 // ===== Multi-image File Input & Carousel =====
 function createGalleryInputBlock(container, existingImages = []) {
