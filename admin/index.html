@@ -5,20 +5,34 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Artist Admin Dashboard</title>
 
-<link rel="apple-touch-icon" sizes="180x180" href="images/favicons/apple-touch-icon.png">
-<link rel="icon" type="image/png" sizes="32x32" href="images/favicons/favicon-32x32.png">
-<link rel="icon" type="image/png" sizes="16x16" href="images/favicons/favicon-16x16.png">
-<link rel="manifest" href="images/favicons/site.webmanifest">
-
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
 <link rel="stylesheet" href="admin/style.css">
+
+<style>
+  body { font-family: 'Inter', sans-serif; background: #f7f9fc; }
+  .sidebar { position: fixed; top: 0; left: 0; height: 100%; width: 250px; background: #1a1a2e; color: #fff; padding-top: 20px; }
+  .sidebar a { display: block; padding: 12px 20px; color: #fff; text-decoration: none; border-left: 4px solid transparent; transition: 0.3s; margin-bottom: 4px; border-radius: 4px; }
+  .sidebar a.active, .sidebar a:hover { background: #162447; border-left: 4px solid #e43f5a; }
+  .sidebar h4 { font-weight: 600; letter-spacing: 1px; margin-bottom: 20px; }
+
+  main { margin-left: 270px; padding: 40px 30px; }
+  header { background: #fff; padding: 15px 30px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); margin-bottom: 30px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; }
+  footer { background: #fff; padding: 20px 30px; text-align: center; color: #555; margin-top: 50px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+
+  .card { border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); }
+  .btn { border-radius: 8px; }
+  input, textarea { border-radius: 8px; }
+  hr { border-top: 1px solid #eee; }
+  .help-icon { cursor: pointer; font-size: 16px; }
+  .sortable .draggable { background: #f9f9f9; border-radius: 8px; padding: 12px; margin-bottom: 8px; box-shadow: 0 2px 6px rgba(0,0,0,0.05); }
+</style>
 
 </head>
 <body>
 
 <!-- Sidebar -->
 <div class="sidebar">
-  <h4 class="text-white text-center py-3">🎛 Admin</h4>
+  <h4 class="text-center">🎛 Admin</h4>
   <a href="#" class="active" data-section="general">🎤 General Info</a>
   <a href="#" data-section="albums">💿 Albums</a>
   <a href="#" data-section="videos">🎬 Videos</a>
@@ -28,30 +42,31 @@
   <a href="#" id="logoutBtn">🚪 Logout</a>
 </div>
 
-<!-- Main Content -->
-<div class="content">
-  <h1 id="sectionTitle">General Info</h1>
+<main>
+  <header>
+    <h1 id="sectionTitle">General Info</h1>
+    <div>Welcome, Admin 🎵</div>
+  </header>
 
-<!-- Login -->
-<div id="loginSection" class="card p-4" style="max-width:400px;">
-  <h3 class="mb-3">Admin Login</h3>
+  <!-- Login -->
+  <div id="loginSection" class="card p-5" style="max-width:400px; margin:auto;">
+    <h3 class="mb-4 text-center">Admin Login</h3>
 
-  <!-- Phone Login -->
-  <input id="phoneInput" type="tel" class="form-control mb-2" placeholder="+1 555 123 4567" />
-  <div id="recaptcha-container" class="mb-2"></div>
-  <button id="sendCodeBtn" class="btn btn-primary w-100 mb-2">Send Code</button>
-  <input id="codeInput" type="text" class="form-control mb-2" placeholder="Enter verification code" />
-  <button id="verifyCodeBtn" class="btn btn-success w-100 mb-3">Verify & Login</button>
+    <!-- Phone Login -->
+    <input id="phoneInput" type="tel" class="form-control mb-3" placeholder="+1 555 123 4567" />
+    <div id="recaptcha-container" class="mb-3"></div>
+    <button id="sendCodeBtn" class="btn btn-primary w-100 mb-3">Send Code</button>
+    <input id="codeInput" type="text" class="form-control mb-3" placeholder="Enter verification code" />
+    <button id="verifyCodeBtn" class="btn btn-success w-100 mb-4">Verify & Login</button>
 
-  <hr>
+    <hr class="mb-4">
 
-  <!-- Google Login -->
-  <button id="googleLoginBtn" class="btn btn-danger w-100">
-    <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google" style="height:20px; margin-right:8px;">
-    Login with Google
-  </button>
-</div>
-
+    <!-- Google Login -->
+    <button id="googleLoginBtn" class="btn btn-danger w-100 d-flex align-items-center justify-content-center">
+      <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google" style="height:20px; margin-right:10px;">
+      Login with Google
+    </button>
+  </div>
 
   <!-- Admin Section -->
   <div id="adminSection" class="d-none">
@@ -61,55 +76,73 @@
       <h4>General Info 
         <span class="help-icon" data-bs-toggle="popover" data-bs-content="Set main artist details, tagline, and hero image.">❔</span>
       </h4>
-      <input id="artistName" class="form-control mb-2" placeholder="Artist Name" />
-      <input id="tagline" class="form-control mb-2" placeholder="Tagline" />
+      <input id="artistName" class="form-control mb-3" placeholder="Artist Name" />
+      <input id="tagline" class="form-control mb-3" placeholder="Tagline" />
       <textarea id="bio" class="form-control mb-3" rows="5" placeholder="Artist bio"></textarea>
-      <input id="heroImage" class="form-control mb-2" placeholder="Hero Image URL" />
-      <button class="btn btn-success">Save Changes</button>
+      <input id="heroImage" class="form-control mb-3" placeholder="Hero Image URL" />
+      <button class="btn btn-success w-100">Save Changes</button>
     </form>
 
     <!-- Dynamic Sections Template -->
     <form id="albumsForm" class="card p-4 mb-4 d-none">
       <h4>Albums <span class="help-icon" data-bs-toggle="popover" data-bs-content="Add album cover, title, and link.">❔</span></h4>
       <div id="albumsList" class="sortable"></div>
-      <button type="button" class="btn btn-outline-primary mt-2" id="addAlbumBtn">+ Add Album</button>
-      <button type="submit" class="btn btn-success mt-2">Save Albums</button>
+      <button type="button" class="btn btn-outline-primary mt-3" id="addAlbumBtn">+ Add Album</button>
+      <button type="submit" class="btn btn-success mt-2 w-100">Save Albums</button>
     </form>
 
     <form id="videosForm" class="card p-4 mb-4 d-none">
       <h4>Videos <span class="help-icon" data-bs-toggle="popover" data-bs-content="Paste YouTube/Vimeo embed links.">❔</span></h4>
       <div id="videosList" class="sortable"></div>
-      <button type="button" class="btn btn-outline-primary mt-2" id="addVideoBtn">+ Add Video</button>
-      <button type="submit" class="btn btn-success mt-2">Save Videos</button>
+      <button type="button" class="btn btn-outline-primary mt-3" id="addVideoBtn">+ Add Video</button>
+      <button type="submit" class="btn btn-success mt-2 w-100">Save Videos</button>
     </form>
 
     <form id="eventsForm" class="card p-4 mb-4 d-none">
       <h4>Events <span class="help-icon" data-bs-toggle="popover" data-bs-content="Add event title, date, venue, flyer.">❔</span></h4>
       <div id="eventsList" class="sortable"></div>
-      <button type="button" class="btn btn-outline-primary mt-2" id="addEventBtn">+ Add Event</button>
-      <button type="submit" class="btn btn-success mt-2">Save Events</button>
+      <button type="button" class="btn btn-outline-primary mt-3" id="addEventBtn">+ Add Event</button>
+      <button type="submit" class="btn btn-success mt-2 w-100">Save Events</button>
     </form>
 
     <form id="socialsForm" class="card p-4 mb-4 d-none">
       <h4>Social Links <span class="help-icon" data-bs-toggle="popover" data-bs-content="Enter links for Spotify, Instagram, etc.">❔</span></h4>
       <div id="socialsList" class="sortable"></div>
-      <button type="button" class="btn btn-outline-primary mt-2" id="addSocialBtn">+ Add Social</button>
-      <button type="submit" class="btn btn-success mt-2">Save Social Links</button>
+      <button type="button" class="btn btn-outline-primary mt-3" id="addSocialBtn">+ Add Social</button>
+      <button type="submit" class="btn btn-success mt-2 w-100">Save Social Links</button>
     </form>
 
     <form id="galleryForm" class="card p-4 mb-4 d-none">
       <h4>Image Gallery <span class="help-icon" data-bs-toggle="popover" data-bs-content="Add image URLs and captions.">❔</span></h4>
       <div id="galleryList" class="sortable"></div>
-      <button type="button" class="btn btn-outline-primary mt-2" id="addImageBtn">+ Add Image</button>
-      <button type="submit" class="btn btn-success mt-2">Save Gallery</button>
+      <button type="button" class="btn btn-outline-primary mt-3" id="addImageBtn">+ Add Image</button>
+      <button type="submit" class="btn btn-success mt-2 w-100">Save Gallery</button>
     </form>
 
   </div>
-</div>
+</main>
 
-<div class="toast-container"></div>
+<footer class="bg-white mt-5 p-4 text-center shadow-sm rounded">
+  <div class="mb-2">
+    <a href="/" target="_blank" class="text-decoration-none text-primary fw-semibold">
+      Home Page
+    </a> | 
+    <a href="admin" class="text-decoration-none text-secondary">Admin Dashboard</a>
+  </div>
+  <div class="text-muted">
+    &copy; <span id="currentYear"></span> MzSuMac.com Created by <a href="https://rw-501.github.io/Portfolio/" target="_blank" class="text-decoration-none text-primary">Ron W.</a> All rights reserved.
+  </div>
+</footer>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+  // Dynamically update the year
+  document.getElementById('currentYear').textContent = new Date().getFullYear();
+</script>
+
+<div class="toast-container position-fixed bottom-0 end-0 p-3"></div>
+
+
+
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
 import { getAuth, RecaptchaVerifier, signInWithPhoneNumber, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-auth.js";
