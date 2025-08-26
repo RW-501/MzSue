@@ -751,6 +751,34 @@ document.getElementById("addImageBtn").addEventListener("click", () => {
   createInputBlock(container, ["Image URL","Caption"], [], [0]);
 });
 
+
+// ===== Form Save Handlers =====
+document.getElementById("albumsForm").addEventListener("submit", e => {
+  e.preventDefault();
+  saveDynamicSection("albums", "albums");
+});
+
+document.getElementById("videosForm").addEventListener("submit", e => {
+  e.preventDefault();
+  saveDynamicSection("videos", "videos");
+});
+
+document.getElementById("eventsForm").addEventListener("submit", e => {
+  e.preventDefault();
+  saveDynamicSection("events", "events");
+});
+
+document.getElementById("socialsForm").addEventListener("submit", e => {
+  e.preventDefault();
+  saveDynamicSection("socials", "socials");
+});
+
+document.getElementById("galleryForm").addEventListener("submit", e => {
+  e.preventDefault();
+  saveDynamicSection("gallery", "gallery");
+});
+
+
 const popoverTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="popover"]'));
 popoverTriggerList.map(el => new bootstrap.Popover(el));
 
