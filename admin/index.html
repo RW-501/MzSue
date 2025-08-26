@@ -80,7 +80,11 @@ hr { border-top: 1px solid #eee; }
       <input id="tagline" class="form-control mb-3" placeholder="Tagline" />
 
 <!-- Quill CSS -->
-<link href="https://cdn.jsdelivr.net/npm/quill@1.3.7/dist/quill.snow.css" rel="stylesheet">
+<!-- Include Quill CSS in <head> -->
+<link href="https://cdn.quilljs.com/1.3.7/quill.snow.css" rel="stylesheet">
+
+<!-- Include Quill JS before your script, ideally before your closing </body> -->
+<script src="https://cdn.quilljs.com/1.3.7/quill.js"></script>
 
 <!-- Rich Text Editor Container -->
 <div id="bioEditor" style="height: 200px;"></div>
