@@ -14,22 +14,24 @@
 <link rel="stylesheet" href="admin/style.css">
 
 <style>
-  body { font-family: 'Inter', sans-serif; background: #f7f9fc; }
-  .sidebar { position: fixed; top: 0; left: 0; height: 100%; width: 250px; background: #1a1a2e; color: #fff; padding-top: 20px; }
-  .sidebar a { display: block; padding: 12px 20px; color: #fff; text-decoration: none; border-left: 4px solid transparent; transition: 0.3s; margin-bottom: 4px; border-radius: 4px; }
-  .sidebar a.active, .sidebar a:hover { background: #162447; border-left: 4px solid #e43f5a; }
-  .sidebar h4 { font-weight: 600; letter-spacing: 1px; margin-bottom: 20px; }
+body { font-family: 'Inter', sans-serif; background: #f7f9fc; }
+.sidebar { position: fixed; top: 0; left: 0; height: 100%; width: 250px; background: #1a1a2e; color: #fff; padding-top: 20px; }
+.sidebar a { display: block; padding: 12px 20px; color: #fff; text-decoration: none; border-left: 4px solid transparent; transition: 0.3s; margin-bottom: 4px; border-radius: 4px; }
+.sidebar a.active, .sidebar a:hover { background: #162447; border-left: 4px solid #e43f5a; }
+.sidebar h4 { font-weight: 600; letter-spacing: 1px; margin-bottom: 20px; }
 
-  main { margin-left: 270px; padding: 40px 30px; }
-  header { background: #fff; padding: 15px 30px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); margin-bottom: 30px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; }
-  footer { background: #fff; padding: 20px 30px; text-align: center; color: #555; margin-top: 50px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+main { margin-left: 270px; padding: 40px 30px; }
+header { background: #fff; padding: 15px 30px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); margin-bottom: 30px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; }
+footer { background: #fff; padding: 20px 30px; text-align: center; color: #555; margin-top: 50px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
 
-  .card { border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); }
-  .btn { border-radius: 8px; }
-  input, textarea { border-radius: 8px; }
-  hr { border-top: 1px solid #eee; }
-  .help-icon { cursor: pointer; font-size: 16px; }
-  .sortable .draggable { background: #f9f9f9; border-radius: 8px; padding: 12px; margin-bottom: 8px; box-shadow: 0 2px 6px rgba(0,0,0,0.05); }
+.card { border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); }
+.btn { border-radius: 8px; }
+input, textarea { border-radius: 8px; }
+hr { border-top: 1px solid #eee; }
+.help-icon { cursor: pointer; font-size: 16px; }
+.sortable .draggable { background: #f9f9f9; border-radius: 8px; padding: 12px; margin-bottom: 8px; box-shadow: 0 2px 6px rgba(0,0,0,0.05); display: flex; gap:8px; flex-wrap: wrap; align-items: center; }
+.file-input-wrapper { display:flex; gap:8px; align-items:center; }
+.file-input-wrapper img { height:50px; width:50px; object-fit:cover; border-radius:6px; }
 </style>
 
 </head>
@@ -56,17 +58,12 @@
   <!-- Login -->
   <div id="loginSection" class="card p-5" style="max-width:400px; margin:auto;">
     <h3 class="mb-4 text-center">Admin Login</h3>
-
-    <!-- Phone Login -->
     <input id="phoneInput" type="tel" class="form-control mb-3" placeholder="+1 555 123 4567" />
     <div id="recaptcha-container" class="mb-3"></div>
     <button id="sendCodeBtn" class="btn btn-primary w-100 mb-3">Send Code</button>
     <input id="codeInput" type="text" class="form-control mb-3" placeholder="Enter verification code" />
     <button id="verifyCodeBtn" class="btn btn-success w-100 mb-4">Verify & Login</button>
-
     <hr class="mb-4">
-
-    <!-- Google Login -->
     <button id="googleLoginBtn" class="btn btn-danger w-100 d-flex align-items-center justify-content-center">
       <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google" style="height:20px; margin-right:10px;">
       Login with Google
@@ -78,17 +75,24 @@
 
     <!-- General Info -->
     <form id="generalForm" class="card p-4 mb-4">
-      <h4>General Info 
-        <span class="help-icon" data-bs-toggle="popover" data-bs-content="Set main artist details, tagline, and hero image.">❔</span>
-      </h4>
+      <h4>General Info <span class="help-icon" data-bs-toggle="popover" data-bs-content="Set main artist details, tagline, and hero image.">❔</span></h4>
       <input id="artistName" class="form-control mb-3" placeholder="Artist Name" />
       <input id="tagline" class="form-control mb-3" placeholder="Tagline" />
       <textarea id="bio" class="form-control mb-3" rows="5" placeholder="Artist bio"></textarea>
-      <input id="heroImage" class="form-control mb-3" placeholder="Hero Image URL" />
+
+      <div class="mb-3">
+        <label>Hero Image</label>
+        <div class="file-input-wrapper">
+          <input type="file" id="heroUpload" class="form-control" accept="image/*">
+          <img id="heroPreview" src="" alt="Preview">
+          <button type="button" class="btn btn-danger btn-sm" id="heroRemoveBtn">Remove</button>
+        </div>
+      </div>
+
       <button class="btn btn-success w-100">Save Changes</button>
     </form>
 
-    <!-- Dynamic Sections Template -->
+    <!-- Albums -->
     <form id="albumsForm" class="card p-4 mb-4 d-none">
       <h4>Albums <span class="help-icon" data-bs-toggle="popover" data-bs-content="Add album cover, title, and link.">❔</span></h4>
       <div id="albumsList" class="sortable"></div>
@@ -96,13 +100,15 @@
       <button type="submit" class="btn btn-success mt-2 w-100">Save Albums</button>
     </form>
 
+    <!-- Videos -->
     <form id="videosForm" class="card p-4 mb-4 d-none">
-      <h4>Videos <span class="help-icon" data-bs-toggle="popover" data-bs-content="Paste YouTube/Vimeo embed links.">❔</span></h4>
+      <h4>Videos <span class="help-icon" data-bs-toggle="popover" data-bs-content="Upload MP4 or embed links.">❔</span></h4>
       <div id="videosList" class="sortable"></div>
       <button type="button" class="btn btn-outline-primary mt-3" id="addVideoBtn">+ Add Video</button>
       <button type="submit" class="btn btn-success mt-2 w-100">Save Videos</button>
     </form>
 
+    <!-- Events -->
     <form id="eventsForm" class="card p-4 mb-4 d-none">
       <h4>Events <span class="help-icon" data-bs-toggle="popover" data-bs-content="Add event title, date, venue, flyer.">❔</span></h4>
       <div id="eventsList" class="sortable"></div>
@@ -110,6 +116,7 @@
       <button type="submit" class="btn btn-success mt-2 w-100">Save Events</button>
     </form>
 
+    <!-- Socials -->
     <form id="socialsForm" class="card p-4 mb-4 d-none">
       <h4>Social Links <span class="help-icon" data-bs-toggle="popover" data-bs-content="Enter links for Spotify, Instagram, etc.">❔</span></h4>
       <div id="socialsList" class="sortable"></div>
@@ -117,6 +124,7 @@
       <button type="submit" class="btn btn-success mt-2 w-100">Save Social Links</button>
     </form>
 
+    <!-- Gallery -->
     <form id="galleryForm" class="card p-4 mb-4 d-none">
       <h4>Image Gallery <span class="help-icon" data-bs-toggle="popover" data-bs-content="Add image URLs and captions.">❔</span></h4>
       <div id="galleryList" class="sortable"></div>
@@ -129,9 +137,7 @@
 
 <footer class="bg-white mt-5 p-4 text-center shadow-sm rounded"> 
   <div class="mb-2">
-    <a href="../" target="_blank" class="text-decoration-none text-primary fw-semibold">
-      Home Page
-    </a> | 
+    <a href="../" target="_blank" class="text-decoration-none text-primary fw-semibold">Home Page</a> | 
     <a href="../admin" class="text-decoration-none text-secondary">Admin Dashboard</a>
   </div>
   <div class="text-muted">
@@ -140,18 +146,16 @@
 </footer>
 
 <script>
-  // Dynamically update the year
-  document.getElementById('currentYear').textContent = new Date().getFullYear();
+document.getElementById('currentYear').textContent = new Date().getFullYear();
 </script>
 
 <div class="toast-container position-fixed bottom-0 end-0 p-3"></div>
-
-
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
 import { getAuth, RecaptchaVerifier, signInWithPhoneNumber, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-auth.js";
 import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js";
+import { getStorage, ref, uploadBytes, getDownloadURL, deleteObject } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-storage.js";
 
 // Firebase
 const firebaseConfig = {
@@ -167,6 +171,8 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
+const storage = getStorage(app);
+
 let confirmationResult;
 
 // Toast helper
@@ -311,22 +317,87 @@ document.querySelectorAll(".sidebar a[data-section]").forEach(link=>{
 });
 
 // Dynamic blocks
-function createInputBlock(container,placeholders,values=[]){
-  const div=document.createElement("div");
-  div.className="mb-2 border p-2 rounded bg-light d-flex gap-2 align-items-start flex-wrap draggable";
-  placeholders.forEach((ph,i)=>{
-    const input=document.createElement("input");
-    input.className="form-control"; input.placeholder=ph; input.value=values[i]||"";
-    input.addEventListener("input",()=>autoSave(container.id));
-    div.appendChild(input);
+function createInputBlock(container, placeholders, values = [], isFileField = []) {
+  const div = document.createElement("div");
+  div.className = "mb-2 border p-2 rounded bg-light d-flex gap-2 align-items-start flex-wrap draggable";
+
+  placeholders.forEach((ph, i) => {
+    let input;
+    if (isFileField[i]) {
+      // File upload
+      input = document.createElement("input");
+      input.type = "file";
+      input.accept = "image/*";
+      input.className = "form-control";
+      input.placeholder = ph;
+
+      const img = document.createElement("img");
+      img.src = values[i] || "";
+      img.style.width = "60px";
+      img.style.height = "60px";
+      img.style.objectFit = "cover";
+      img.style.borderRadius = "6px";
+
+      let currentRef = null;
+
+      input.addEventListener("change", async () => {
+        if (!input.files[0]) return;
+        const file = input.files[0];
+        const storageRef = ref(storage, `${container.id}/${file.name}`);
+        await uploadBytes(storageRef, file);
+        const url = await getDownloadURL(storageRef);
+        img.src = url;
+        currentRef = storageRef;
+        // Save URL in a hidden input
+        hiddenInput.value = url;
+      });
+
+      const hiddenInput = document.createElement("input");
+      hiddenInput.type = "hidden";
+      hiddenInput.value = values[i] || "";
+
+      const removeBtn = document.createElement("button");
+      removeBtn.type = "button";
+      removeBtn.className = "btn btn-danger btn-sm";
+      removeBtn.textContent = "Remove";
+      removeBtn.addEventListener("click", async () => {
+        if (currentRef) await deleteObject(currentRef);
+        div.remove();
+        autoSave(container.id);
+      });
+
+      div.appendChild(input);
+      div.appendChild(img);
+      div.appendChild(hiddenInput);
+      div.appendChild(removeBtn);
+    } else {
+      input = document.createElement("input");
+      input.type = "text";
+      input.className = "form-control";
+      input.placeholder = ph;
+      input.value = values[i] || "";
+      input.addEventListener("input", () => autoSave(container.id));
+      div.appendChild(input);
+    }
   });
-  const removeBtn=document.createElement("button");
-  removeBtn.className="btn btn-danger btn-sm"; removeBtn.type="button"; removeBtn.textContent="Remove";
-  removeBtn.onclick=()=>{ div.remove(); autoSave(container.id); };
-  div.appendChild(removeBtn);
+
+  // Add remove button if not already added
+  if (!isFileField.includes(true)) {
+    const removeBtn = document.createElement("button");
+    removeBtn.className = "btn btn-danger btn-sm";
+    removeBtn.type = "button";
+    removeBtn.textContent = "Remove";
+    removeBtn.onclick = () => {
+      div.remove();
+      autoSave(container.id);
+    };
+    div.appendChild(removeBtn);
+  }
+
   container.appendChild(div);
   return div;
 }
+
 
 // Auto save
 async function autoSave(containerId){
@@ -335,23 +406,45 @@ async function autoSave(containerId){
 }
 
 // Add buttons
-document.getElementById("addAlbumBtn").addEventListener("click",()=>createInputBlock(document.getElementById("albumsList"),["Album Title","Cover URL","Link"]));
 document.getElementById("addVideoBtn").addEventListener("click",()=>createInputBlock(document.getElementById("videosList"),["Video Title","Embed URL"]));
-document.getElementById("addEventBtn").addEventListener("click",()=>createInputBlock(document.getElementById("eventsList"),["Event Name","Date","Venue","Flyer URL"]));
 document.getElementById("addSocialBtn").addEventListener("click",()=>createInputBlock(document.getElementById("socialsList"),["Platform","URL"]));
-document.getElementById("addImageBtn").addEventListener("click",()=>createInputBlock(document.getElementById("galleryList"),["Image URL","Caption"]));
+
+// Albums: [Title, Cover URL (file), Link]
+document.getElementById("addAlbumBtn").addEventListener("click", () =>
+  createInputBlock(document.getElementById("albumsList"),
+                   ["Album Title", "Cover Image", "Link"],
+                   [],
+                   [false, true, false])
+);
+
+// Events: [Event Name, Date, Venue, Flyer URL (file)]
+document.getElementById("addEventBtn").addEventListener("click", () =>
+  createInputBlock(document.getElementById("eventsList"),
+                   ["Event Name", "Date", "Venue", "Flyer Image"],
+                   [],
+                   [false, false, false, true])
+);
+
+// Gallery: [Image URL (file), Caption]
+document.getElementById("addImageBtn").addEventListener("click", () =>
+  createInputBlock(document.getElementById("galleryList"),
+                   ["Image", "Caption"],
+                   [],
+                   [true, false])
+);
 
 // Save dynamic sections
 async function saveDynamicSection(containerId, docName){
   const container=document.getElementById(containerId+"List");
   const items=[];
   container.querySelectorAll("div").forEach(div=>{
-    const vals=Array.from(div.querySelectorAll("input")).map(i=>i.value);
+    const vals=Array.from(div.querySelectorAll("input")).map(i => i.type === "hidden" ? i.value : i.value);
     if(vals.some(v=>v)) items.push(vals);
   });
   await setDoc(doc(db,"siteContent",docName),{items},{merge:true});
   showToast(containerId+" updated!");
 }
+
 
 // Submit listeners
 ["albums","videos","events","socials","gallery"].forEach(sec=>{
@@ -419,6 +512,72 @@ function enableDragSort(container){
       placeholder.remove();
     });
   });
+}
+
+
+// ===== Hero Image Upload =====
+const heroUpload = document.getElementById("heroUpload");
+const heroPreview = document.getElementById("heroPreview");
+const heroRemoveBtn = document.getElementById("heroRemoveBtn");
+let currentHeroRef = null;
+
+heroUpload.addEventListener("change", async ()=>{
+  if(heroUpload.files.length === 0) return;
+  const file = heroUpload.files[0];
+  const storageRef = ref(storage,"hero/"+file.name);
+  await uploadBytes(storageRef,file);
+  const url = await getDownloadURL(storageRef);
+  heroPreview.src = url;
+  currentHeroRef = storageRef;
+  document.getElementById("heroImage").value = url;
+  showToast("Hero image uploaded");
+});
+
+heroRemoveBtn.addEventListener("click", async ()=>{
+  if(!currentHeroRef) return;
+  try{
+    await deleteObject(currentHeroRef);
+    heroPreview.src="";
+    document.getElementById("heroImage").value="";
+    currentHeroRef = null;
+    showToast("Hero image removed","danger");
+  } catch(err){ showToast(err.message,"danger"); }
+});
+
+// ===== Dynamic Sections Upload (Gallery, Events Flyers, Albums) =====
+function createFileInput(container,placeholder,existingUrl=""){
+  const div = document.createElement("div");
+  div.className="file-input-wrapper draggable";
+
+  const input = document.createElement("input");
+  input.type="file"; input.accept="image/*"; input.className="form-control"; input.placeholder=placeholder;
+
+  const img = document.createElement("img");
+  img.src = existingUrl || ""; img.alt="Preview";
+
+  const removeBtn = document.createElement("button");
+  removeBtn.type="button"; removeBtn.className="btn btn-danger btn-sm"; removeBtn.textContent="Remove";
+
+  let currentRef = null;
+
+  input.addEventListener("change", async ()=>{
+    if(input.files.length === 0) return;
+    const file = input.files[0];
+    const storageRef = ref(storage,`${container.id}/${file.name}`);
+    await uploadBytes(storageRef,file);
+    const url = await getDownloadURL(storageRef);
+    img.src = url;
+    currentRef = storageRef;
+  });
+
+  removeBtn.addEventListener("click", async ()=>{
+    if(currentRef) await deleteObject(currentRef);
+    div.remove();
+  });
+
+  div.appendChild(input); div.appendChild(img); div.appendChild(removeBtn);
+  container.appendChild(div);
+  return div;
 }
 
 </script>
