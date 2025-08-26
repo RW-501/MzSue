@@ -1,0 +1,171 @@
+/* Reset & Base */
+  body { background: #f8f9fa; }
+  .sidebar { width: 250px; min-height: 100vh; background: #212529; position: fixed; top:0; left:0; }
+  .sidebar a { color: #adb5bd; text-decoration: none; display: block; padding: 10px 15px; }
+  .sidebar a.active, .sidebar a:hover { background: #343a40; color: #fff; }
+  .content { margin-left: 250px; padding: 30px; }
+  .toast-container { position: fixed; top: 1rem; right: 1rem; z-index: 1100; }
+  .help-icon { cursor:pointer; font-size:0.9rem; color:#0d6efd; margin-left:6px; }
+/* Draggable items */
+.draggable {
+  cursor: grab;
+  background: #fff;
+  border-radius: 10px;
+  padding: 12px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  transition: background 0.2s, box-shadow 0.2s, transform 0.2s;
+  border: 1px solid #dee2e6;
+}
+.draggable:hover {
+  background: #f8f9fa;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+/* Dragging effect */
+.draggable.dragging {
+  opacity: 0.6;
+  transform: scale(1.02);
+  border: 2px dashed #0d6efd;
+  background: #e7f1ff;
+}
+
+/* Drop placeholder */
+.sortable .placeholder {
+  height: 60px;
+  margin: 5px 0;
+  border: 2px dashed #0d6efd;
+  border-radius: 10px;
+  background: #d0e7ff;
+  transition: all 0.2s;
+}
+  
+body {
+  background: #f0f2f5;
+  font-family: "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  color: #343a40;
+  transition: background 0.3s;
+}
+
+
+/* Sidebar */
+.sidebar {
+  width: 260px;
+  min-height: 100vh;
+  background: linear-gradient(180deg, #1a1f28 0%, #212529 100%);
+  position: fixed;
+  top: 0;
+  left: 0;
+  box-shadow: 2px 0 12px rgba(0,0,0,0.2);
+  border-right: 1px solid #2c3038;
+  z-index: 100;
+}
+.sidebar h4 {
+  font-weight: 600;
+  letter-spacing: 1px;
+  color: #fff;
+  background: #15181f;
+  margin: 0;
+  padding: 20px 0;
+  box-shadow: inset 0 -1px 0 rgba(255,255,255,0.1);
+}
+.sidebar a {
+  color: #cfd3da;
+  text-decoration: none;
+  display: block;
+  padding: 12px 20px;
+  font-size: 0.95rem;
+  transition: 0.3s;
+  border-radius: 0 10px 10px 0;
+  margin: 4px 0;
+}
+.sidebar a.active, .sidebar a:hover {
+  background: #0d6efd;
+  color: #fff;
+  box-shadow: 0 2px 6px rgba(13,110,253,0.3);
+}
+
+/* Main Content */
+.content {
+  margin-left: 260px;
+  padding: 40px;
+  transition: margin-left 0.3s;
+}
+
+/* Cards */
+.card {
+  border-radius: 12px;
+  box-shadow: 0 6px 15px rgba(0,0,0,0.08);
+  transition: transform 0.2s, box-shadow 0.3s;
+}
+.card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 25px rgba(0,0,0,0.12);
+}
+
+/* Inputs */
+.form-control {
+  border-radius: 8px;
+  border: 1px solid #ced4da;
+  padding: 10px 12px;
+  transition: all 0.2s;
+}
+.form-control:focus {
+  border-color: #0d6efd;
+  box-shadow: 0 0 8px rgba(13,110,253,0.2);
+}
+
+/* Buttons */
+.btn-outline-primary {
+  border-radius: 8px;
+  transition: all 0.2s;
+}
+.btn-outline-primary:hover {
+  background: #0d6efd;
+  color: #fff;
+  box-shadow: 0 4px 12px rgba(13,110,253,0.3);
+}
+
+/* Toasts */
+.toast {
+  border-radius: 8px;
+  font-size: 0.9rem;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+/* Help icon */
+.help-icon {
+  cursor: pointer;
+  font-size: 1rem;
+  color: #0d6efd;
+  margin-left: 6px;
+  transition: transform 0.2s;
+}
+.help-icon:hover {
+  transform: scale(1.2);
+}
+
+/* Draggable items */
+.draggable {
+  cursor: grab;
+  background: #fff;
+  border-radius: 10px;
+  padding: 12px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  transition: background 0.2s, box-shadow 0.2s;
+}
+.draggable:hover {
+  background: #f1f3f5;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+/* Dynamic section container */
+.sortable {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 15px;
+}

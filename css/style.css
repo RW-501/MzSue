@@ -1,0 +1,45 @@
+ 
+  /* Smooth scroll */
+  html { scroll-behavior: smooth; }
+
+
+/* Hero Parallax & Blur-Up */
+#hero {
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed;
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  position: relative;
+  overflow: hidden;
+  filter: blur(20px);
+  transition: filter 1s ease-out;
+}
+#hero.loaded { filter: blur(0); }
+#hero::after {
+  content:'';
+  position:absolute;
+  top:0; left:0; width:100%; height:100%;
+  background: rgba(0,0,0,0.5);
+}
+#hero .container { position: relative; z-index: 1; text-align: center; }
+#hero h1, #hero p, #hero a { opacity:0; transform: translateY(20px); transition: all 0.8s ease-out; }
+#hero.visible h1, #hero.visible p, #hero.visible a { opacity:1; transform: translateY(0); }
+
+/* Section headings */
+section h2 { opacity:0; transform: translateY(20px); transition: all 0.8s ease-out; }
+section h2.visible { opacity:1; transform: translateY(0); }
+
+/* Cards */
+.fade-in { opacity:0; transform: translateY(20px); transition: all 0.8s ease-out; }
+.fade-in.visible { opacity:1; transform: translateY(0); }
+.card:hover { transform: translateY(-5px) scale(1.02); transition: transform 0.3s; box-shadow: 0 10px 20px rgba(0,0,0,0.15); }
+
+/* Buttons */
+.btn-outline-primary:hover { background-color: #0d6efd; color: #fff; border-color: #0d6efd; }
+
+/* Counters */
+.counter { font-weight: 700; font-size: 2rem; color: #0d6efd; }

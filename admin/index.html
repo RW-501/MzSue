@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Artist Admin Dashboard</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+<link rel="stylesheet" href="admin/style.css">
+
+</head>
+<body>
+
+<!-- Sidebar -->
+<div class="sidebar">
+  <h4 class="text-white text-center py-3">🎛 Admin</h4>
+  <a href="#" class="active" data-section="general">🎤 General Info</a>
+  <a href="#" data-section="albums">💿 Albums</a>
+  <a href="#" data-section="videos">🎬 Videos</a>
+  <a href="#" data-section="events">📅 Events</a>
+  <a href="#" data-section="socials">🌍 Social Links</a>
+  <a href="#" data-section="gallery">🖼 Image Gallery</a>
+  <a href="#" id="logoutBtn">🚪 Logout</a>
+</div>
+
+<!-- Main Content -->
+<div class="content">
+  <h1 id="sectionTitle">General Info</h1>
+
+  <!-- Login -->
+  <div id="loginSection" class="card p-4" style="max-width:400px;">
+    <h3 class="mb-3">Admin Login</h3>
+    <input id="phoneInput" type="tel" class="form-control mb-2" placeholder="+1 555 123 4567" />
+    <div id="recaptcha-container"></div>
+    <button id="sendCodeBtn" class="btn btn-primary w-100">Send Code</button>
+    <input id="codeInput" type="text" class="form-control mt-3 mb-2" placeholder="Enter verification code" />
+    <button id="verifyCodeBtn" class="btn btn-success w-100">Verify & Login</button>
+  </div>
+
+  <!-- Admin Section -->
+  <div id="adminSection" class="d-none">
+
+    <!-- General Info -->
+    <form id="generalForm" class="card p-4 mb-4">
+      <h4>General Info 
+        <span class="help-icon" data-bs-toggle="popover" data-bs-content="Set main artist details, tagline, and hero image.">❔</span>
+      </h4>
+      <input id="artistName" class="form-control mb-2" placeholder="Artist Name" />
+      <input id="tagline" class="form-control mb-2" placeholder="Tagline" />
+      <textarea id="bio" class="form-control mb-3" rows="5" placeholder="Artist bio"></textarea>
+      <input id="heroImage" class="form-control mb-2" placeholder="Hero Image URL" />
+      <button class="btn btn-success">Save Changes</button>
+    </form>
+
+    <!-- Dynamic Sections Template -->
+    <form id="albumsForm" class="card p-4 mb-4 d-none">
+      <h4>Albums <span class="help-icon" data-bs-toggle="popover" data-bs-content="Add album cover, title, and link.">❔</span></h4>
+      <div id="albumsList" class="sortable"></div>
+      <button type="button" class="btn btn-outline-primary mt-2" id="addAlbumBtn">+ Add Album</button>
+      <button type="submit" class="btn btn-success mt-2">Save Albums</button>
+    </form>
+
+    <form id="videosForm" class="card p-4 mb-4 d-none">
+      <h4>Videos <span class="help-icon" data-bs-toggle="popover" data-bs-content="Paste YouTube/Vimeo embed links.">❔</span></h4>
+      <div id="videosList" class="sortable"></div>
+      <button type="button" class="btn btn-outline-primary mt-2" id="addVideoBtn">+ Add Video</button>
+      <button type="submit" class="btn btn-success mt-2">Save Videos</button>
+    </form>
+
+    <form id="eventsForm" class="card p-4 mb-4 d-none">
+      <h4>Events <span class="help-icon" data-bs-toggle="popover" data-bs-content="Add event title, date, venue, flyer.">❔</span></h4>
+      <div id="eventsList" class="sortable"></div>
+      <button type="button" class="btn btn-outline-primary mt-2" id="addEventBtn">+ Add Event</button>
+      <button type="submit" class="btn btn-success mt-2">Save Events</button>
+    </form>
+
+    <form id="socialsForm" class="card p-4 mb-4 d-none">
+      <h4>Social Links <span class="help-icon" data-bs-toggle="popover" data-bs-content="Enter links for Spotify, Instagram, etc.">❔</span></h4>
+      <div id="socialsList" class="sortable"></div>
+      <button type="button" class="btn btn-outline-primary mt-2" id="addSocialBtn">+ Add Social</button>
+      <button type="submit" class="btn btn-success mt-2">Save Social Links</button>
+    </form>
+
+    <form id="galleryForm" class="card p-4 mb-4 d-none">
+      <h4>Image Gallery <span class="help-icon" data-bs-toggle="popover" data-bs-content="Add image URLs and captions.">❔</span></h4>
+      <div id="galleryList" class="sortable"></div>
+      <button type="button" class="btn btn-outline-primary mt-2" id="addImageBtn">+ Add Image</button>
+      <button type="submit" class="btn btn-success mt-2">Save Gallery</button>
+    </form>
+
+  </div>
+</div>
+
+<div class="toast-container"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
+import { getAuth, RecaptchaVerifier, signInWithPhoneNumber, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-auth.js";
+import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js";
+
+// Firebase
+const firebaseConfig = {
+  apiKey: "AIzaSyDsPKvHw4pmk_st5S7tThW3nMZCfVulW7A",
+  authDomain: "mzsue-df11c.firebaseapp.com",
+  projectId: "mzsue-df11c",
+  storageBucket: "mzsue-df11c.appspot.com",
+  messagingSenderId: "524697523710",
+  appId: "1:524697523710:web:0acc49354ee82350929caf"
+};
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+let confirmationResult;
+
+// Toast
+function showToast(msg,type="success"){
+  const wrapper=document.createElement("div");
+  wrapper.className=`toast align-items-center text-bg-${type} border-0 show mb-2`;
+  wrapper.innerHTML=`<div class="d-flex"><div class="toast-body">${msg}</div><button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button></div>`;
+  document.querySelector(".toast-container").appendChild(wrapper);
+  setTimeout(()=>wrapper.remove(),4000);
+}
+
+// Popovers
+[...document.querySelectorAll('[data-bs-toggle="popover"]')].map(el=>new bootstrap.Popover(el));
+
+// Recaptcha
+window.recaptchaVerifier = new RecaptchaVerifier(auth,"recaptcha-container",{ size:"normal" });
+
+// Phone login
+document.getElementById("sendCodeBtn").addEventListener("click", async ()=>{
+  const phone = document.getElementById("phoneInput").value;
+  try { confirmationResult = await signInWithPhoneNumber(auth,phone,window.recaptchaVerifier); showToast("Code sent to "+phone,"info"); }
+  catch(err){ showToast(err.message,"danger"); }
+});
+document.getElementById("verifyCodeBtn").addEventListener("click", async ()=>{
+  const code = document.getElementById("codeInput").value;
+  try{
+    const result = await confirmationResult.confirm(code);
+    const phone = result.user.phoneNumber;
+    const snap = await getDoc(doc(db,"config","admins"));
+    const allowed = snap.exists() ? snap.data().phoneNumbers||[] : [];
+    if(!allowed.includes(phone)){ await signOut(auth); showToast("Unauthorized number","danger"); }
+    else { showToast("Logged in as "+phone); loadAllSections(); }
+  }catch(err){ showToast(err.message,"danger");}
+});
+
+// Auth state
+onAuthStateChanged(auth,user=>{
+  if(user){ document.getElementById("loginSection").classList.add("d-none"); document.getElementById("adminSection").classList.remove("d-none"); loadGeneral(); loadAllSections(); }
+  else{ document.getElementById("loginSection").classList.remove("d-none"); document.getElementById("adminSection").classList.add("d-none"); }
+});
+document.getElementById("logoutBtn").addEventListener("click",()=>signOut(auth));
+
+// Load general info
+async function loadGeneral(){
+  const snap = await getDoc(doc(db,"siteContent","main"));
+  if(snap.exists()){
+    const d=snap.data();
+    document.getElementById("artistName").value=d.name||"";
+    document.getElementById("tagline").value=d.tagline||"";
+    document.getElementById("bio").value=d.bio||"";
+    document.getElementById("heroImage").value=d.heroImage||"";
+  }
+}
+
+// Save general info
+document.getElementById("generalForm").addEventListener("submit",async e=>{
+  e.preventDefault();
+  await setDoc(doc(db,"siteContent","main"),{
+    name: document.getElementById("artistName").value,
+    tagline: document.getElementById("tagline").value,
+    bio: document.getElementById("bio").value,
+    heroImage: document.getElementById("heroImage").value
+  },{merge:true});
+  showToast("General info updated!");
+});
+
+// Sidebar navigation
+document.querySelectorAll(".sidebar a[data-section]").forEach(link=>{
+  link.addEventListener("click",e=>{
+    e.preventDefault();
+    document.querySelectorAll(".sidebar a").forEach(l=>l.classList.remove("active"));
+    link.classList.add("active");
+    document.getElementById("sectionTitle").textContent = link.textContent.trim();
+    document.querySelectorAll("#adminSection form").forEach(f=>f.classList.add("d-none"));
+    document.getElementById(link.dataset.section+"Form").classList.remove("d-none");
+  });
+});
+
+// Dynamic blocks
+function createInputBlock(container,placeholders,values=[]){
+  const div=document.createElement("div");
+  div.className="mb-2 border p-2 rounded bg-light d-flex gap-2 align-items-start flex-wrap draggable";
+  placeholders.forEach((ph,i)=>{
+    const input=document.createElement("input");
+    input.className="form-control"; input.placeholder=ph; input.value=values[i]||"";
+    input.addEventListener("input",()=>autoSave(container.id));
+    div.appendChild(input);
+  });
+  const removeBtn=document.createElement("button");
+  removeBtn.className="btn btn-danger btn-sm"; removeBtn.type="button"; removeBtn.textContent="Remove";
+  removeBtn.onclick=()=>{ div.remove(); autoSave(container.id); };
+  div.appendChild(removeBtn);
+  container.appendChild(div);
+  return div;
+}
+
+// Auto save
+async function autoSave(containerId){
+  const mapping = {albums:"albums",videos:"videos",events:"events",socials:"socials",gallery:"gallery"};
+  if(mapping[containerId]) await saveDynamicSection(containerId,mapping[containerId]);
+}
+
+// Add buttons
+document.getElementById("addAlbumBtn").addEventListener("click",()=>createInputBlock(document.getElementById("albumsList"),["Album Title","Cover URL","Link"]));
+document.getElementById("addVideoBtn").addEventListener("click",()=>createInputBlock(document.getElementById("videosList"),["Video Title","Embed URL"]));
+document.getElementById("addEventBtn").addEventListener("click",()=>createInputBlock(document.getElementById("eventsList"),["Event Name","Date","Venue","Flyer URL"]));
+document.getElementById("addSocialBtn").addEventListener("click",()=>createInputBlock(document.getElementById("socialsList"),["Platform","URL"]));
+document.getElementById("addImageBtn").addEventListener("click",()=>createInputBlock(document.getElementById("galleryList"),["Image URL","Caption"]));
+
+// Save dynamic sections
+async function saveDynamicSection(containerId, docName){
+  const container=document.getElementById(containerId+"List");
+  const items=[];
+  container.querySelectorAll("div").forEach(div=>{
+    const vals=Array.from(div.querySelectorAll("input")).map(i=>i.value);
+    if(vals.some(v=>v)) items.push(vals);
+  });
+  await setDoc(doc(db,"siteContent",docName),{items},{merge:true});
+  showToast(containerId+" updated!");
+}
+
+// Submit listeners
+["albums","videos","events","socials","gallery"].forEach(sec=>{
+  document.getElementById(sec+"Form").addEventListener("submit",async e=>{
+    e.preventDefault(); await saveDynamicSection(sec,sec);
+  });
+});
+
+// Load all dynamic sections
+async function loadAllSections(){
+  ["albums","videos","events","socials","gallery"].forEach(async sec=>{
+    const snap = await getDoc(doc(db,"siteContent",sec));
+    if(snap.exists()){
+      const items = snap.data().items || [];
+      const container = document.getElementById(sec+"List");
+      container.innerHTML="";
+      let placeholders = [];
+      switch(sec){
+        case "albums": placeholders=["Album Title","Cover URL","Link"]; break;
+        case "videos": placeholders=["Video Title","Embed URL"]; break;
+        case "events": placeholders=["Event Name","Date","Venue","Flyer URL"]; break;
+        case "socials": placeholders=["Platform","URL"]; break;
+        case "gallery": placeholders=["Image URL","Caption"]; break;
+      }
+      items.forEach(vals=>createInputBlock(container,placeholders,vals));
+      enableDragSort(container);
+    }
+  });
+}
+
+// Drag & Drop
+function enableDragSort(container){
+  let dragSrcEl = null;
+  let placeholder = document.createElement('div');
+  placeholder.className = 'placeholder';
+
+  container.querySelectorAll('.draggable').forEach(item=>{
+    item.draggable = true;
+
+    item.addEventListener('dragstart', e => {
+      dragSrcEl = item;
+      item.classList.add('dragging');
+      e.dataTransfer.effectAllowed = 'move';
+    });
+
+    item.addEventListener('dragend', e => {
+      item.classList.remove('dragging');
+      placeholder.remove();
+    });
+
+    item.addEventListener('dragover', e => {
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'move';
+      const rect = item.getBoundingClientRect();
+      const next = (e.clientY - rect.top) / rect.height > 0.5;
+      container.insertBefore(placeholder, next ? item.nextSibling : item);
+    });
+
+    item.addEventListener('drop', e => {
+      e.stopPropagation();
+      if(dragSrcEl !== item){
+        container.insertBefore(dragSrcEl, placeholder);
+        autoSave(container.id);
+      }
+      placeholder.remove();
+    });
+  });
+}
+
+</script>
+</body>
+</html>
