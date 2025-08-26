@@ -719,7 +719,37 @@ document.getElementById("heroRemoveBtn").addEventListener("click", () => {
 });
 
 // ===== Add Gallery Button =====
-document.getElementById("addGalleryBtn").addEventListener("click", ()=>createGalleryInputBlock(document.getElementById("galleryList")));
+// ===== Add Button Handlers =====
+document.getElementById("addAlbumBtn").addEventListener("click", () => {
+  const container = document.getElementById("albumsList");
+  createInputBlock(container, ["Album Title","Cover Image","Link"], [], [1]);
+});
+
+document.getElementById("addVideoBtn").addEventListener("click", () => {
+  const container = document.getElementById("videosList");
+  createInputBlock(container, ["Video Title","Embed URL"]);
+});
+
+document.getElementById("addEventBtn").addEventListener("click", () => {
+  const container = document.getElementById("eventsList");
+  createInputBlock(container, ["Event Name","Date","Venue","Flyer Image"], [], [3]);
+});
+
+document.getElementById("addSocialBtn").addEventListener("click", () => {
+  const container = document.getElementById("socialsList");
+  createInputBlock(container, ["Platform","URL"]);
+});
+
+document.getElementById("addGalleryBtn").addEventListener("click", () => {
+  const container = document.getElementById("galleryList");
+  createGalleryInputBlock(container);
+});
+
+// (optional) if you want "+ Add Image" separate:
+document.getElementById("addImageBtn").addEventListener("click", () => {
+  const container = document.getElementById("galleryList");
+  createInputBlock(container, ["Image URL","Caption"], [], [0]);
+});
 
 const popoverTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="popover"]'));
 popoverTriggerList.map(el => new bootstrap.Popover(el));
