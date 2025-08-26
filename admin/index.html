@@ -82,6 +82,7 @@ hr { border-top: 1px solid #eee; }
 
       <div class="mb-3">
         <label>Hero Image</label>
+        <input type="hidden" id="heroImage">
         <div class="file-input-wrapper">
           <input type="file" id="heroUpload" class="form-control" accept="image/*">
           <img id="heroPreview" src="" alt="Preview">
@@ -128,6 +129,7 @@ hr { border-top: 1px solid #eee; }
     <form id="galleryForm" class="card p-4 mb-4 d-none">
       <h4>Image Gallery <span class="help-icon" data-bs-toggle="popover" data-bs-content="Add image URLs and captions.">❔</span></h4>
       <div id="galleryList" class="sortable"></div>
+      <button type="button" class="btn btn-outline-primary mt-3" id="addGalleryBtn">+ Add Gallery Block</button>
       <button type="button" class="btn btn-outline-primary mt-3" id="addImageBtn">+ Add Image</button>
       <button type="submit" class="btn btn-success mt-2 w-100">Save Gallery</button>
     </form>
@@ -150,14 +152,13 @@ document.getElementById('currentYear').textContent = new Date().getFullYear();
 </script>
 
 <div class="toast-container position-fixed bottom-0 end-0 p-3"></div>
-
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
 import { getAuth, RecaptchaVerifier, signInWithPhoneNumber, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-auth.js";
-import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js";
+import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js";
 import { getStorage, ref, uploadBytes, getDownloadURL, deleteObject } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-storage.js";
 
-// Firebase
+// ===== Firebase Config =====
 const firebaseConfig = {
   apiKey: "AIzaSyDsPKvHw4pmk_st5S7tThW3nMZCfVulW7A",
   authDomain: "mzsue-df11c.firebaseapp.com",
@@ -167,419 +168,427 @@ const firebaseConfig = {
   appId: "1:524697523710:web:0acc49354ee82350929caf",
   measurementId: "G-SXTX1JEV7H"
 };
-
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 const storage = getStorage(app);
 
-let confirmationResult;
-
-// Toast helper
-function showToast(msg,type="success"){
-  const wrapper=document.createElement("div");
-  wrapper.className=`toast align-items-center text-bg-${type} border-0 show mb-2`;
-  wrapper.innerHTML=`<div class="d-flex"><div class="toast-body">${msg}</div>
+// ===== Toast Helper =====
+function showToast(msg, type="success"){
+  const wrapper = document.createElement("div");
+  wrapper.className = `toast align-items-center text-bg-${type} border-0 show mb-2`;
+  wrapper.innerHTML = `<div class="d-flex"><div class="toast-body">${msg}</div>
     <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button></div>`;
   document.querySelector(".toast-container").appendChild(wrapper);
   setTimeout(()=>wrapper.remove(),4000);
 }
 
-// ===== Phone Login =====
-window.addEventListener("DOMContentLoaded", () => {
-  window.recaptchaVerifier = new RecaptchaVerifier(
-    document.getElementById("recaptcha-container"),
-    { size: "normal" },
-    auth
-  );
-});
+// ===== Phone & Google Login Setup =====
+let confirmationResult;
+const allowedEmails = ['1988lrp@gmail.com','other@gmail.com','admin@example.com'];
+const allowedPhones = ['+19725977878','+16666666666'];
 
-// Format phone number for Firebase (+15555555555)
 function formatPhoneNumber(number){
-  number = number.replace(/\D/g,''); // remove non-digits
-  if(number.length === 10) number = '+1' + number; // prepend +1 if 10 digits
-  if(number.length === 11 && number[0] !== '+') number = '+' + number; // ensure leading +
+  number = number.replace(/\D/g,'');
+  if(number.length === 10) number = '+1' + number;
+  if(number.length === 11 && number[0] !== '+') number = '+' + number;
   return number;
 }
 
-// Auto-format phone input while typing
-const phoneInput = document.getElementById("phoneInput");
-phoneInput.addEventListener("input", () => {
-  let val = phoneInput.value.replace(/\D/g,''); // digits only
-  if(val.length <= 10){
-    // Format as +1 555 555 5555
-    if(val.length >= 1) val = '+1 ' + val;
-    if(val.length > 6) val = val.slice(0,6) + ' ' + val.slice(6); // +1 555 555
-    if(val.length > 10) val = val.slice(0,10) + ' ' + val.slice(10); // +1 555 555 5555
-  } else {
-    val = '+' + val; // fallback for full numbers with country code
-  }
-  phoneInput.value = val;
+window.addEventListener("DOMContentLoaded", () => {
+  window.recaptchaVerifier = new RecaptchaVerifier(
+    document.getElementById("recaptcha-container"), { size:"normal" }, auth
+  );
 });
 
-// Allowed emails and phones
-const allowedEmails = ['1988lrp@gmail.com', 'other@gmail.com', 'admin@example.com'];
-const allowedPhones = ['+19725977878', '+16666666666']; // add more numbers here
+// Auto-format phone input
+document.getElementById("phoneInput").addEventListener("input", (e)=>{
+  let val = e.target.value.replace(/\D/g,'');
+  if(val.length <=10) {
+    if(val.length>=1) val='+1 '+val;
+    if(val.length>6) val=val.slice(0,6)+' '+val.slice(6);
+    if(val.length>10) val=val.slice(0,10)+' '+val.slice(10);
+  } else val='+'+val;
+  e.target.value=val;
+});
 
-// ===== Phone Login =====
-document.getElementById("sendCodeBtn").addEventListener("click", async () => {
-  let phone = formatPhoneNumber(document.getElementById("phoneInput").value);
-  if(!allowedPhones.includes(phone)){
-    showToast("Unauthorized number","danger");
-    return;
-  }
-  try { 
-    confirmationResult = await signInWithPhoneNumber(auth, phone, window.recaptchaVerifier); 
-    showToast("Code sent to "+phone,"info"); 
+// Phone login
+document.getElementById("sendCodeBtn").addEventListener("click", async ()=>{
+  const phone = formatPhoneNumber(document.getElementById("phoneInput").value);
+  if(!allowedPhones.includes(phone)){ showToast("Unauthorized number","danger"); return; }
+  try {
+    confirmationResult = await signInWithPhoneNumber(auth, phone, window.recaptchaVerifier);
+    showToast("Code sent to "+phone,"info");
   } catch(err){ showToast(err.message,"danger"); }
 });
-
-document.getElementById("verifyCodeBtn").addEventListener("click", async () => {
+document.getElementById("verifyCodeBtn").addEventListener("click", async ()=>{
   const code = document.getElementById("codeInput").value;
-  try {
+  try{
     const result = await confirmationResult.confirm(code);
-    const phone = result.user.phoneNumber;
-    if(!allowedPhones.includes(phone)){
-      await signOut(auth); 
-      showToast("Unauthorized number","danger"); 
-    } else {
-      showToast("Logged in as "+phone);
-      loadAllSections();
+    if(!allowedPhones.includes(result.user.phoneNumber)){
+      await signOut(auth); showToast("Unauthorized number","danger"); return;
     }
+    showToast("Logged in as "+result.user.phoneNumber);
+    loadAllSections();
   } catch(err){ showToast(err.message,"danger"); }
 });
 
-// ===== Google Login =====
+// Google login
 const googleProvider = new GoogleAuthProvider();
-document.getElementById("googleLoginBtn").addEventListener("click", async () => {
-  try {
+document.getElementById("googleLoginBtn").addEventListener("click", async ()=>{
+  try{
     const result = await signInWithPopup(auth, googleProvider);
-    const email = result.user.email;
-    if(!allowedEmails.includes(email)){
-      await signOut(auth);
-      showToast("Unauthorized email","danger");
-    } else {
-      showToast("Logged in as "+email);
-      loadAllSections();
+    if(!allowedEmails.includes(result.user.email)){
+      await signOut(auth); showToast("Unauthorized email","danger"); return;
     }
+    showToast("Logged in as "+result.user.email);
+    loadAllSections();
   } catch(err){ showToast(err.message,"danger"); }
 });
 
-// ===== Auth State =====
-onAuthStateChanged(auth,user=>{
+// Auth state
+onAuthStateChanged(auth, user => {
   if(user){
     document.getElementById("loginSection").classList.add("d-none");
     document.getElementById("adminSection").classList.remove("d-none");
-    loadGeneral(); 
-    loadAllSections();
+    loadGeneral(); loadAllSections();
   } else {
     document.getElementById("loginSection").classList.remove("d-none");
     document.getElementById("adminSection").classList.add("d-none");
   }
 });
-
 document.getElementById("logoutBtn").addEventListener("click",()=>signOut(auth));
 
-// Load general info
+// ===== Load & Save General Info =====
 async function loadGeneral(){
   const snap = await getDoc(doc(db,"siteContent","main"));
   if(snap.exists()){
     const d=snap.data();
-    document.getElementById("artistName").value=d.name||"";
-    document.getElementById("tagline").value=d.tagline||"";
-    document.getElementById("bio").value=d.bio||"";
-    document.getElementById("heroImage").value=d.heroImage||"";
+    ["artistName","tagline","bio","heroImage"].forEach(id=>{
+      if(document.getElementById(id)) document.getElementById(id).value=d[id]||"";
+    });
   }
 }
-
-// Save general info
-document.getElementById("generalForm").addEventListener("submit",async e=>{
+document.getElementById("generalForm").addEventListener("submit", async e=>{
   e.preventDefault();
-  await setDoc(doc(db,"siteContent","main"),{
+  const data={
     name: document.getElementById("artistName").value,
     tagline: document.getElementById("tagline").value,
     bio: document.getElementById("bio").value,
     heroImage: document.getElementById("heroImage").value
-  },{merge:true});
+  };
+  await setDoc(doc(db,"siteContent","main"),data,{merge:true});
   showToast("General info updated!");
 });
 
-// Sidebar navigation
+// ===== Sidebar Navigation =====
 document.querySelectorAll(".sidebar a[data-section]").forEach(link=>{
-  link.addEventListener("click",e=>{
+  link.addEventListener("click", e=>{
     e.preventDefault();
     document.querySelectorAll(".sidebar a").forEach(l=>l.classList.remove("active"));
     link.classList.add("active");
-    document.getElementById("sectionTitle").textContent = link.textContent.trim();
+    document.getElementById("sectionTitle").textContent=link.textContent.trim();
     document.querySelectorAll("#adminSection form").forEach(f=>f.classList.add("d-none"));
     document.getElementById(link.dataset.section+"Form").classList.remove("d-none");
   });
 });
 
-// Dynamic blocks
-function createInputBlock(container, placeholders, values = [], isFileField = []) {
-  const div = document.createElement("div");
-  div.className = "mb-2 border p-2 rounded bg-light d-flex gap-2 align-items-start flex-wrap draggable";
+// ===== Dynamic Blocks & Drag/Drop =====
+function enableDragSort(container){
+  container.querySelectorAll(".draggable").forEach(item=>{
+    item.draggable=true;
+    item.addEventListener("dragstart", e=>{ item.classList.add("dragging"); e.dataTransfer.effectAllowed='move'; e.dataTransfer.setData("text/plain",""); });
+    item.addEventListener("dragend", e=>{ item.classList.remove("dragging"); container.querySelector(".placeholder")?.remove(); });
+    item.addEventListener("dragover", e=>{
+      e.preventDefault();
+      const placeholder = container.querySelector(".placeholder") || (()=>{ const ph=document.createElement("div"); ph.className="placeholder"; container.appendChild(ph); return ph; })();
+      const rect = item.getBoundingClientRect();
+      const next = (e.clientY - rect.top)/rect.height>0.5;
+      container.insertBefore(placeholder, next?item.nextSibling:item);
+    });
+    item.addEventListener("drop", e=>{
+      e.stopPropagation();
+      const placeholder = container.querySelector(".placeholder");
+      if(item!==container.querySelector(".dragging")) container.insertBefore(container.querySelector(".dragging"), placeholder);
+      placeholder?.remove();
+      autoSave(container.id);
+    });
+  });
+}
 
-  placeholders.forEach((ph, i) => {
-    let input;
-    if (isFileField[i]) {
-      // File upload
-      input = document.createElement("input");
-      input.type = "file";
-      input.accept = "image/*";
-      input.className = "form-control";
-      input.placeholder = ph;
+// ===== File Input Helper (Multi-file support) =====
+function createFileInput(container, placeholder, existingValues=[], multiple=false){
+  const wrapper=document.createElement("div"); wrapper.className="d-flex flex-wrap gap-2 mb-2 draggable";
+  const input=document.createElement("input"); input.type="file"; input.accept="image/*"; input.multiple=multiple; input.className="form-control";
+  const hiddenInputs=[];
 
-      const img = document.createElement("img");
-      img.src = values[i] || "";
-      img.style.width = "60px";
-      img.style.height = "60px";
-      img.style.objectFit = "cover";
-      img.style.borderRadius = "6px";
+  const previewContainer=document.createElement("div"); previewContainer.className="d-flex flex-wrap gap-2";
 
-      let currentRef = null;
+  function addPreview(file,url){
+    const imgWrapper=document.createElement("div"); imgWrapper.style.position="relative";
+    const img=document.createElement("img"); img.src=url; img.style.width="60px"; img.style.height="60px"; img.style.objectFit="cover"; img.style.borderRadius="6px";
+    const removeBtn=document.createElement("button"); removeBtn.type="button"; removeBtn.textContent="×"; removeBtn.style.position="absolute"; removeBtn.style.top="0"; removeBtn.style.right="0"; removeBtn.className="btn btn-sm btn-danger";
+    removeBtn.addEventListener("click", ()=>{ imgWrapper.remove(); hiddenInputs.splice(hiddenInputs.indexOf(url),1); autoSave(container.id); });
+    imgWrapper.append(img,removeBtn); previewContainer.appendChild(imgWrapper);
+  }
 
-      input.addEventListener("change", async () => {
-        if (!input.files[0]) return;
-        const file = input.files[0];
-        const storageRef = ref(storage, `${container.id}/${file.name}`);
-        await uploadBytes(storageRef, file);
-        const url = await getDownloadURL(storageRef);
-        img.src = url;
-        currentRef = storageRef;
-        // Save URL in a hidden input
-        hiddenInput.value = url;
-      });
+  existingValues.forEach(url=>{ addPreview(null,url); hiddenInputs.push(url); });
 
-      const hiddenInput = document.createElement("input");
-      hiddenInput.type = "hidden";
-      hiddenInput.value = values[i] || "";
+  input.addEventListener("change", async ()=>{
+    for(const file of input.files){
+      const storageRef=ref(storage, `${container.id}/${file.name}`);
+      await uploadBytes(storageRef,file);
+      const url=await getDownloadURL(storageRef);
+      addPreview(file,url); hiddenInputs.push(url);
+      autoSave(container.id);
+    }
+    input.value="";
+  });
 
-      const removeBtn = document.createElement("button");
-      removeBtn.type = "button";
-      removeBtn.className = "btn btn-danger btn-sm";
-      removeBtn.textContent = "Remove";
-      removeBtn.addEventListener("click", async () => {
-        if (currentRef) await deleteObject(currentRef);
-        div.remove();
-        autoSave(container.id);
-      });
+  wrapper.append(input,previewContainer);
+  container.appendChild(wrapper);
+  return hiddenInputs;
+}
 
-      div.appendChild(input);
-      div.appendChild(img);
-      div.appendChild(hiddenInput);
-      div.appendChild(removeBtn);
+// ===== Input Block with optional file input =====
+function createInputBlock(container, placeholders, values=[], fileIndices=[]){
+  const div=document.createElement("div");
+  div.className="mb-2 border p-2 rounded bg-light d-flex gap-2 align-items-start flex-wrap draggable";
+
+  placeholders.forEach((ph,i)=>{
+    if(fileIndices.includes(i)){
+      createFileInput(div, ph, values[i]? [values[i]] : [], false);
     } else {
-      input = document.createElement("input");
-      input.type = "text";
-      input.className = "form-control";
-      input.placeholder = ph;
-      input.value = values[i] || "";
-      input.addEventListener("input", () => autoSave(container.id));
+      const input=document.createElement("input");
+      input.type="text"; input.className="form-control"; input.placeholder=ph; input.value=values[i]||"";
+      input.addEventListener("input", ()=>autoSave(container.id));
       div.appendChild(input);
     }
   });
 
-  // Add remove button if not already added
-  if (!isFileField.includes(true)) {
-    const removeBtn = document.createElement("button");
-    removeBtn.className = "btn btn-danger btn-sm";
-    removeBtn.type = "button";
-    removeBtn.textContent = "Remove";
-    removeBtn.onclick = () => {
-      div.remove();
-      autoSave(container.id);
-    };
+  if(!fileIndices.length){
+    const removeBtn=document.createElement("button");
+    removeBtn.type="button"; removeBtn.className="btn btn-danger btn-sm"; removeBtn.textContent="Remove";
+    removeBtn.addEventListener("click", ()=>{ div.remove(); autoSave(container.id); });
     div.appendChild(removeBtn);
   }
 
   container.appendChild(div);
+  enableDragSort(container);
   return div;
 }
 
 
-// Auto save
-async function autoSave(containerId){
-  const mapping = {albums:"albums",videos:"videos",events:"events",socials:"socials",gallery:"gallery"};
-  if(mapping[containerId]) await saveDynamicSection(containerId,mapping[containerId]);
-}
 
-// Add buttons
-document.getElementById("addVideoBtn").addEventListener("click",()=>createInputBlock(document.getElementById("videosList"),["Video Title","Embed URL"]));
-document.getElementById("addSocialBtn").addEventListener("click",()=>createInputBlock(document.getElementById("socialsList"),["Platform","URL"]));
-
-// Albums: [Title, Cover URL (file), Link]
-document.getElementById("addAlbumBtn").addEventListener("click", () =>
-  createInputBlock(document.getElementById("albumsList"),
-                   ["Album Title", "Cover Image", "Link"],
-                   [],
-                   [false, true, false])
-);
-
-// Events: [Event Name, Date, Venue, Flyer URL (file)]
-document.getElementById("addEventBtn").addEventListener("click", () =>
-  createInputBlock(document.getElementById("eventsList"),
-                   ["Event Name", "Date", "Venue", "Flyer Image"],
-                   [],
-                   [false, false, false, true])
-);
-
-// Gallery: [Image URL (file), Caption]
-document.getElementById("addImageBtn").addEventListener("click", () =>
-  createInputBlock(document.getElementById("galleryList"),
-                   ["Image", "Caption"],
-                   [],
-                   [true, false])
-);
-
-// Save dynamic sections
 async function saveDynamicSection(containerId, docName){
   const container=document.getElementById(containerId+"List");
   const items=[];
   container.querySelectorAll("div").forEach(div=>{
-    const vals=Array.from(div.querySelectorAll("input")).map(i => i.type === "hidden" ? i.value : i.value);
-    if(vals.some(v=>v)) items.push(vals);
+    const vals=Array.from(div.querySelectorAll("input[type=text]")).map(i=>i.value);
+    const fileUrls=Array.from(div.querySelectorAll("input[type=hidden]")).map(i=>i.value);
+    const merged = vals.concat(fileUrls);
+    if(merged.some(v=>v)) items.push(merged);
   });
-  await setDoc(doc(db,"siteContent",docName),{items},{merge:true});
+  await setDoc(doc(db,"siteContent",docName), {items}, {merge:true});
+  showToast(containerId+" updated!");
+}
+
+// Load all sections
+async function loadAllSections(){
+  const sections=["albums","videos","events","socials","gallery"];
+  for(const sec of sections){
+    const snap=await getDoc(doc(db,"siteContent",sec));
+    const items=snap.exists()? snap.data().items||[] : [];
+    const container=document.getElementById(sec+"List");
+    container.innerHTML="";
+    let placeholders=[], fileIndices=[];
+    switch(sec){
+      case "albums": placeholders=["Album Title","Cover Image","Link"]; fileIndices=[1]; break;
+      case "videos": placeholders=["Video Title","Embed URL"]; fileIndices=[]; break;
+      case "events": placeholders=["Event Name","Date","Venue","Flyer Image"]; fileIndices=[3]; break;
+      case "socials": placeholders=["Platform","URL"]; fileIndices=[]; break;
+      case "gallery": placeholders=["Image","Caption"]; fileIndices=[0]; break;
+    }
+    items.forEach(vals=>createInputBlock(container,placeholders,vals,fileIndices));
+  }
+}
+
+// ===== Multi-image File Input & Carousel =====
+function createGalleryInputBlock(container, existingImages = []) {
+  const wrapper = document.createElement("div");
+  wrapper.className = "mb-2 border p-2 rounded bg-light draggable";
+
+  // File input for new images
+  const input = document.createElement("input");
+  input.type = "file";
+  input.accept = "image/*";
+  input.multiple = true;
+  input.className = "form-control mb-2";
+  wrapper.appendChild(input);
+
+  // Carousel container
+  const carouselId = "carousel" + Date.now();
+  const carouselDiv = document.createElement("div");
+  carouselDiv.className = "carousel slide mb-2";
+  carouselDiv.id = carouselId;
+  const carouselInner = document.createElement("div");
+  carouselInner.className = "carousel-inner";
+  carouselDiv.appendChild(carouselInner);
+  wrapper.appendChild(carouselDiv);
+
+  // Hidden input to store all image URLs
+  const hiddenInput = document.createElement("input");
+  hiddenInput.type = "hidden";
+  wrapper.appendChild(hiddenInput);
+
+  // Function to add images to carousel
+  async function addImages(filesOrUrls) {
+    for (const item of filesOrUrls) {
+      let url;
+      let storageRef;
+      if (item instanceof File) {
+        storageRef = ref(storage, `gallery/${item.name}-${Date.now()}`);
+        await uploadBytes(storageRef, item);
+        url = await getDownloadURL(storageRef);
+      } else {
+        // item is a string URL (preload)
+        url = item;
+      }
+
+      const carouselItem = document.createElement("div");
+      carouselItem.className = "carousel-item";
+
+      const img = document.createElement("img");
+      img.src = url;
+      img.className = "d-block w-100";
+      img.style.height = "150px";
+      img.style.objectFit = "cover";
+
+      carouselItem.appendChild(img);
+
+      // Active first slide
+      if (carouselInner.children.length === 0) carouselItem.classList.add("active");
+
+      // Remove button
+      const removeBtn = document.createElement("button");
+      removeBtn.type = "button";
+      removeBtn.textContent = "×";
+      removeBtn.className = "btn btn-sm btn-danger position-absolute";
+      removeBtn.style.top = "5px";
+      removeBtn.style.right = "5px";
+      removeBtn.addEventListener("click", async () => {
+        // Delete from storage if it’s a newly uploaded file
+        if (storageRef) await deleteObject(storageRef);
+        carouselItem.remove();
+        hiddenInput.value = hiddenInput.value.split(",").filter(u => u !== url).join(",");
+        autoSave("gallery");
+      });
+
+      carouselItem.appendChild(removeBtn);
+      carouselInner.appendChild(carouselItem);
+
+      // Update hidden input
+      const urls = hiddenInput.value ? hiddenInput.value.split(",") : [];
+      urls.push(url);
+      hiddenInput.value = urls.join(",");
+    }
+    autoSave("gallery");
+  }
+
+  input.addEventListener("change", async () => {
+    await addImages(Array.from(input.files));
+    input.value = "";
+  });
+
+  // Preload existing images (URLs only)
+  if (existingImages.length) addImages(existingImages);
+
+  // Remove entire block
+  const removeBlockBtn = document.createElement("button");
+  removeBlockBtn.type = "button";
+  removeBlockBtn.className = "btn btn-danger btn-sm mt-2";
+  removeBlockBtn.textContent = "Remove Block";
+  removeBlockBtn.addEventListener("click", () => {
+    wrapper.remove();
+    autoSave("gallery");
+  });
+  wrapper.appendChild(removeBlockBtn);
+
+  container.appendChild(wrapper);
+  return wrapper;
+}
+
+
+// ===== Auto-save Gallery Section =====
+async function autoSave(containerId){
+  const sectionsMap = {
+    albums: "albums",
+    videos: "videos",
+    events: "events",
+    socials: "socials",
+    gallery: "gallery"
+  };
+  if(!sectionsMap[containerId]) return;
+
+  const container=document.getElementById(containerId+"List");
+  const items=[];
+  container.querySelectorAll("div.draggable").forEach(div=>{
+    const vals=Array.from(div.querySelectorAll("input[type=text]")).map(i=>i.value);
+    const fileUrls=Array.from(div.querySelectorAll("input[type=hidden]")).map(i=>i.value);
+    const merged = vals.concat(fileUrls);
+    if(merged.some(v=>v)) items.push(merged);
+  });
+  await setDoc(doc(db,"siteContent",sectionsMap[containerId]), {items}, {merge:true});
   showToast(containerId+" updated!");
 }
 
 
-// Submit listeners
-["albums","videos","events","socials","gallery"].forEach(sec=>{
-  document.getElementById(sec+"Form").addEventListener("submit",async e=>{
-    e.preventDefault(); await saveDynamicSection(sec,sec);
-  });
-});
-
-// Load all dynamic sections
-async function loadAllSections(){
-  ["albums","videos","events","socials","gallery"].forEach(async sec=>{
-    const snap = await getDoc(doc(db,"siteContent",sec));
-    if(snap.exists()){
-      const items = snap.data().items || [];
-      const container = document.getElementById(sec+"List");
-      container.innerHTML="";
-      let placeholders = [];
-      switch(sec){
-        case "albums": placeholders=["Album Title","Cover URL","Link"]; break;
-        case "videos": placeholders=["Video Title","Embed URL"]; break;
-        case "events": placeholders=["Event Name","Date","Venue","Flyer URL"]; break;
-        case "socials": placeholders=["Platform","URL"]; break;
-        case "gallery": placeholders=["Image URL","Caption"]; break;
-      }
-      items.forEach(vals=>createInputBlock(container,placeholders,vals));
-      enableDragSort(container);
-    }
-  });
-}
-
-// Drag & Drop
-function enableDragSort(container){
-  let dragSrcEl = null;
-  let placeholder = document.createElement('div');
-  placeholder.className = 'placeholder';
-
-  container.querySelectorAll('.draggable').forEach(item=>{
-    item.draggable = true;
-
-    item.addEventListener('dragstart', e => {
-      dragSrcEl = item;
-      item.classList.add('dragging');
-      e.dataTransfer.effectAllowed = 'move';
-    });
-
-    item.addEventListener('dragend', e => {
-      item.classList.remove('dragging');
-      placeholder.remove();
-    });
-
-    item.addEventListener('dragover', e => {
-      e.preventDefault();
-      e.dataTransfer.dropEffect = 'move';
-      const rect = item.getBoundingClientRect();
-      const next = (e.clientY - rect.top) / rect.height > 0.5;
-      container.insertBefore(placeholder, next ? item.nextSibling : item);
-    });
-
-    item.addEventListener('drop', e => {
-      e.stopPropagation();
-      if(dragSrcEl !== item){
-        container.insertBefore(dragSrcEl, placeholder);
-        autoSave(container.id);
-      }
-      placeholder.remove();
-    });
-  });
+// ===== Load Gallery Section =====
+async function loadGallery() {
+  const snap = await getDoc(doc(db, "siteContent", "gallery"));
+  const container = document.getElementById("galleryList");
+  container.innerHTML = "";
+  const items = snap.exists() ? snap.data().items || [] : [];
+  items.forEach(urls => createGalleryInputBlock(container, urls));
 }
 
 
-// ===== Hero Image Upload =====
+// Hero image upload
 const heroUpload = document.getElementById("heroUpload");
 const heroPreview = document.getElementById("heroPreview");
-const heroRemoveBtn = document.getElementById("heroRemoveBtn");
-let currentHeroRef = null;
+const heroInput = document.getElementById("heroImage");
 
-heroUpload.addEventListener("change", async ()=>{
-  if(heroUpload.files.length === 0) return;
+heroUpload.addEventListener("change", async () => {
   const file = heroUpload.files[0];
-  const storageRef = ref(storage,"hero/"+file.name);
-  await uploadBytes(storageRef,file);
+  if (!file) return;
+
+  // Upload to Firebase Storage
+  const storageRef = ref(storage, `hero/${file.name}-${Date.now()}`);
+  await uploadBytes(storageRef, file);
   const url = await getDownloadURL(storageRef);
+
+  // Update preview & hidden input
   heroPreview.src = url;
-  currentHeroRef = storageRef;
-  document.getElementById("heroImage").value = url;
-  showToast("Hero image uploaded");
+  heroInput.value = url;
+
+  showToast("Hero image uploaded!");
 });
 
-heroRemoveBtn.addEventListener("click", async ()=>{
-  if(!currentHeroRef) return;
-  try{
-    await deleteObject(currentHeroRef);
-    heroPreview.src="";
-    document.getElementById("heroImage").value="";
-    currentHeroRef = null;
-    showToast("Hero image removed","danger");
-  } catch(err){ showToast(err.message,"danger"); }
+// Remove hero image
+document.getElementById("heroRemoveBtn").addEventListener("click", () => {
+  heroPreview.src = "";
+  heroInput.value = "";
 });
 
-// ===== Dynamic Sections Upload (Gallery, Events Flyers, Albums) =====
-function createFileInput(container,placeholder,existingUrl=""){
-  const div = document.createElement("div");
-  div.className="file-input-wrapper draggable";
+// ===== Add Gallery Button =====
+document.getElementById("addGalleryBtn").addEventListener("click", ()=>createGalleryInputBlock(document.getElementById("galleryList")));
 
-  const input = document.createElement("input");
-  input.type="file"; input.accept="image/*"; input.className="form-control"; input.placeholder=placeholder;
+const popoverTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="popover"]'));
+popoverTriggerList.map(el => new bootstrap.Popover(el));
 
-  const img = document.createElement("img");
-  img.src = existingUrl || ""; img.alt="Preview";
-
-  const removeBtn = document.createElement("button");
-  removeBtn.type="button"; removeBtn.className="btn btn-danger btn-sm"; removeBtn.textContent="Remove";
-
-  let currentRef = null;
-
-  input.addEventListener("change", async ()=>{
-    if(input.files.length === 0) return;
-    const file = input.files[0];
-    const storageRef = ref(storage,`${container.id}/${file.name}`);
-    await uploadBytes(storageRef,file);
-    const url = await getDownloadURL(storageRef);
-    img.src = url;
-    currentRef = storageRef;
-  });
-
-  removeBtn.addEventListener("click", async ()=>{
-    if(currentRef) await deleteObject(currentRef);
-    div.remove();
-  });
-
-  div.appendChild(input); div.appendChild(img); div.appendChild(removeBtn);
-  container.appendChild(div);
-  return div;
-}
-
+// Call loadGallery on page load
+loadGallery();
 </script>
+
 </body>
 </html>
