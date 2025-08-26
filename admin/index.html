@@ -78,7 +78,15 @@ hr { border-top: 1px solid #eee; }
       <h4>General Info <span class="help-icon" data-bs-toggle="popover" data-bs-content="Set main artist details, tagline, and hero image.">❔</span></h4>
       <input id="artistName" class="form-control mb-3" placeholder="Artist Name" />
       <input id="tagline" class="form-control mb-3" placeholder="Tagline" />
-      <textarea id="bio" class="form-control mb-3" rows="5" placeholder="Artist bio"></textarea>
+
+<!-- Quill CSS -->
+<link href="https://cdn.jsdelivr.net/npm/quill@1.3.7/dist/quill.snow.css" rel="stylesheet">
+
+<!-- Rich Text Editor Container -->
+<div id="bioEditor" style="height: 200px;"></div>
+
+<!-- Hidden input to store HTML content -->
+<input type="hidden" id="bio">
 
       <div class="mb-3">
         <label>Hero Image</label>
@@ -259,6 +267,21 @@ onAuthStateChanged(auth, user => {
 });
 document.getElementById("logoutBtn").addEventListener("click",()=>signOut(auth));
 
+
+// Initialize Quill
+const quill = new Quill('#bioEditor', {
+  theme: 'snow',
+  placeholder: 'Write the artist bio here...',
+  modules: {
+    toolbar: [
+      [{ header: [1, 2, false] }],
+      ['bold', 'italic', 'underline', 'strike'],
+      [{ list: 'ordered' }, { list: 'bullet' }],
+      ['link', 'image'],
+      ['clean']
+    ]
+  }
+});
 // ===== Load & Save General Info =====
 async function loadGeneral(){
   const snap = await getDoc(doc(db,"siteContent","main"));
@@ -267,19 +290,23 @@ async function loadGeneral(){
     ["artistName","tagline","bio","heroImage"].forEach(id=>{
       if(document.getElementById(id)) document.getElementById(id).value=d[id]||"";
     });
+          if(data.bio) quill.root.innerHTML = data.bio; // load rich text
+    if(data.heroImage) document.getElementById("heroPreview").src = data.heroImage;
+  
   }
 }
-document.getElementById("generalForm").addEventListener("submit", async e=>{
+document.getElementById("generalForm").addEventListener("submit", async e => {
   e.preventDefault();
-  const data={
+  const data = {
     name: document.getElementById("artistName").value,
     tagline: document.getElementById("tagline").value,
-    bio: document.getElementById("bio").value,
+    bio: quill.root.innerHTML, // save formatted HTML
     heroImage: document.getElementById("heroImage").value
   };
-  await setDoc(doc(db,"siteContent","main"),data,{merge:true});
+  await setDoc(doc(db, "siteContent", "main"), data, { merge: true });
   showToast("General info updated!");
 });
+
 
 // ===== Sidebar Navigation =====
 document.querySelectorAll(".sidebar a[data-section]").forEach(link=>{

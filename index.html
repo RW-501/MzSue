@@ -163,13 +163,11 @@ section h2.visible { opacity:1; transform: translateY(0); }
 <!-- Footer -->
 <footer class="bg-white mt-5 p-4 text-center shadow-sm rounded"> 
   <div class="mb-2">
-    <a href="../" target="_blank" class="text-decoration-none text-primary fw-semibold" id="footerName">
-      
-    </a> Home Page | 
+    <div class="text-decoration-none text-primary fw-semibold" id="footerName"></div> | 
     <a href="../admin" class="text-decoration-none text-secondary">Admin Dashboard</a>
   </div>
   <div class="text-muted">
-    Copyright &copy; <span id="currentYear"></span> MzSuMac.com Created by <a href="https://rw-501.github.io/Portfolio/" target="_blank" class="text-decoration-none text-primary">Ron W.</a> All rights reserved.
+    Copyright &copy; <span id="currentYear"></span> <a href="../" target="_blank" class="text-decoration-none text-primary fw-semibold">MzSuMac.com</a> Created by <a href="https://rw-501.github.io/Portfolio/" target="_blank" class="text-decoration-none text-primary">Ron W.</a> All rights reserved.
   </div>
 </footer>
 <script>
@@ -219,7 +217,7 @@ async function loadContent(){
     document.getElementById("metaDescription").content = data.bio;
     document.getElementById("ogDescription").content = data.bio;
     document.getElementById("twitterDescription").content = data.bio;
-    document.getElementById("aboutBio").textContent = data.bio;
+    document.getElementById("aboutBio").innerHTML = data.bio;
   }
   if(data.heroImage){
     document.getElementById("ogImage").content = data.heroImage;
