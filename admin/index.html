@@ -353,16 +353,26 @@ document.getElementById("generalForm").addEventListener("submit", async e => {
 
 
 // ===== Sidebar Navigation =====
-document.querySelectorAll(".sidebar a[data-section]").forEach(link=>{
-  link.addEventListener("click", e=>{
+document.querySelectorAll(".sidebar a[data-section]").forEach(link => {
+  link.addEventListener("click", e => {
     e.preventDefault();
-    document.querySelectorAll(".sidebar a").forEach(l=>l.classList.remove("active"));
+    document.querySelectorAll(".sidebar a").forEach(l => l.classList.remove("active"));
     link.classList.add("active");
-    document.getElementById("sectionTitle").textContent=link.textContent.trim();
-    document.querySelectorAll("#adminSection form").forEach(f=>f.classList.add("d-none"));
-    document.getElementById(link.dataset.section+"Form").classList.remove("d-none");
+
+    const sectionTitle = document.getElementById("sectionTitle");
+    if (sectionTitle) sectionTitle.textContent = link.textContent.trim();
+
+    document.querySelectorAll("#adminSection form").forEach(f => f.classList.add("d-none"));
+
+    const targetForm = document.getElementById(link.dataset.section + "Form");
+    if (targetForm) {
+      targetForm.classList.remove("d-none");
+    } else {
+      console.warn("No form found for section:", link.dataset.section);
+    }
   });
 });
+
 
 // ===== Dynamic Blocks & Drag/Drop =====
 function enableDragSort(container){
