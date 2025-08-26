@@ -4,6 +4,12 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Artist Admin Dashboard</title>
+
+<link rel="apple-touch-icon" sizes="180x180" href="images/favicons/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="32x32" href="images/favicons/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="images/favicons/favicon-16x16.png">
+<link rel="manifest" href="images/favicons/site.webmanifest">
+
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
 <link rel="stylesheet" href="admin/style.css">
 
@@ -26,15 +32,26 @@
 <div class="content">
   <h1 id="sectionTitle">General Info</h1>
 
-  <!-- Login -->
-  <div id="loginSection" class="card p-4" style="max-width:400px;">
-    <h3 class="mb-3">Admin Login</h3>
-    <input id="phoneInput" type="tel" class="form-control mb-2" placeholder="+1 555 123 4567" />
-    <div id="recaptcha-container"></div>
-    <button id="sendCodeBtn" class="btn btn-primary w-100">Send Code</button>
-    <input id="codeInput" type="text" class="form-control mt-3 mb-2" placeholder="Enter verification code" />
-    <button id="verifyCodeBtn" class="btn btn-success w-100">Verify & Login</button>
-  </div>
+<!-- Login -->
+<div id="loginSection" class="card p-4" style="max-width:400px;">
+  <h3 class="mb-3">Admin Login</h3>
+
+  <!-- Phone Login -->
+  <input id="phoneInput" type="tel" class="form-control mb-2" placeholder="+1 555 123 4567" />
+  <div id="recaptcha-container" class="mb-2"></div>
+  <button id="sendCodeBtn" class="btn btn-primary w-100 mb-2">Send Code</button>
+  <input id="codeInput" type="text" class="form-control mb-2" placeholder="Enter verification code" />
+  <button id="verifyCodeBtn" class="btn btn-success w-100 mb-3">Verify & Login</button>
+
+  <hr>
+
+  <!-- Google Login -->
+  <button id="googleLoginBtn" class="btn btn-danger w-100">
+    <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google" style="height:20px; margin-right:8px;">
+    Login with Google
+  </button>
+</div>
+
 
   <!-- Admin Section -->
   <div id="adminSection" class="d-none">
@@ -95,61 +112,113 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
-import { getAuth, RecaptchaVerifier, signInWithPhoneNumber, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-auth.js";
-import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js";
+import { getAuth, RecaptchaVerifier, signInWithPhoneNumber, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-auth.js";
+import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore.js";
 
 // Firebase
-const firebaseConfig = {
-  apiKey: "AIzaSyDsPKvHw4pmk_st5S7tThW3nMZCfVulW7A",
-  authDomain: "mzsue-df11c.firebaseapp.com",
-  projectId: "mzsue-df11c",
-  storageBucket: "mzsue-df11c.appspot.com",
-  messagingSenderId: "524697523710",
-  appId: "1:524697523710:web:0acc49354ee82350929caf"
-};
+const firebaseConfig = { /* your config */ };
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 let confirmationResult;
 
-// Toast
+// Toast helper
 function showToast(msg,type="success"){
   const wrapper=document.createElement("div");
   wrapper.className=`toast align-items-center text-bg-${type} border-0 show mb-2`;
-  wrapper.innerHTML=`<div class="d-flex"><div class="toast-body">${msg}</div><button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button></div>`;
+  wrapper.innerHTML=`<div class="d-flex"><div class="toast-body">${msg}</div>
+    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button></div>`;
   document.querySelector(".toast-container").appendChild(wrapper);
   setTimeout(()=>wrapper.remove(),4000);
 }
 
-// Popovers
-[...document.querySelectorAll('[data-bs-toggle="popover"]')].map(el=>new bootstrap.Popover(el));
-
-// Recaptcha
+// ===== Phone Login =====
 window.recaptchaVerifier = new RecaptchaVerifier(auth,"recaptcha-container",{ size:"normal" });
 
-// Phone login
-document.getElementById("sendCodeBtn").addEventListener("click", async ()=>{
-  const phone = document.getElementById("phoneInput").value;
-  try { confirmationResult = await signInWithPhoneNumber(auth,phone,window.recaptchaVerifier); showToast("Code sent to "+phone,"info"); }
-  catch(err){ showToast(err.message,"danger"); }
-});
-document.getElementById("verifyCodeBtn").addEventListener("click", async ()=>{
-  const code = document.getElementById("codeInput").value;
-  try{
-    const result = await confirmationResult.confirm(code);
-    const phone = result.user.phoneNumber;
-    const snap = await getDoc(doc(db,"config","admins"));
-    const allowed = snap.exists() ? snap.data().phoneNumbers||[] : [];
-    if(!allowed.includes(phone)){ await signOut(auth); showToast("Unauthorized number","danger"); }
-    else { showToast("Logged in as "+phone); loadAllSections(); }
-  }catch(err){ showToast(err.message,"danger");}
+// Format phone number for Firebase (+15555555555)
+function formatPhoneNumber(number){
+  number = number.replace(/\D/g,''); // remove non-digits
+  if(number.length === 10) number = '+1' + number; // prepend +1 if 10 digits
+  if(number.length === 11 && number[0] !== '+') number = '+' + number; // ensure leading +
+  return number;
+}
+
+// Auto-format phone input while typing
+const phoneInput = document.getElementById("phoneInput");
+phoneInput.addEventListener("input", () => {
+  let val = phoneInput.value.replace(/\D/g,''); // digits only
+  if(val.length <= 10){
+    // Format as +1 555 555 5555
+    if(val.length >= 1) val = '+1 ' + val;
+    if(val.length > 6) val = val.slice(0,6) + ' ' + val.slice(6); // +1 555 555
+    if(val.length > 10) val = val.slice(0,10) + ' ' + val.slice(10); // +1 555 555 5555
+  } else {
+    val = '+' + val; // fallback for full numbers with country code
+  }
+  phoneInput.value = val;
 });
 
-// Auth state
-onAuthStateChanged(auth,user=>{
-  if(user){ document.getElementById("loginSection").classList.add("d-none"); document.getElementById("adminSection").classList.remove("d-none"); loadGeneral(); loadAllSections(); }
-  else{ document.getElementById("loginSection").classList.remove("d-none"); document.getElementById("adminSection").classList.add("d-none"); }
+// Allowed emails and phones
+const allowedEmails = ['1988lrp@gmail.com', 'other@gmail.com', 'admin@example.com'];
+const allowedPhones = ['+19725977878', '+16666666666']; // add more numbers here
+
+// ===== Phone Login =====
+document.getElementById("sendCodeBtn").addEventListener("click", async () => {
+  let phone = formatPhoneNumber(document.getElementById("phoneInput").value);
+  if(!allowedPhones.includes(phone)){
+    showToast("Unauthorized number","danger");
+    return;
+  }
+  try { 
+    confirmationResult = await signInWithPhoneNumber(auth, phone, window.recaptchaVerifier); 
+    showToast("Code sent to "+phone,"info"); 
+  } catch(err){ showToast(err.message,"danger"); }
 });
+
+document.getElementById("verifyCodeBtn").addEventListener("click", async () => {
+  const code = document.getElementById("codeInput").value;
+  try {
+    const result = await confirmationResult.confirm(code);
+    const phone = result.user.phoneNumber;
+    if(!allowedPhones.includes(phone)){
+      await signOut(auth); 
+      showToast("Unauthorized number","danger"); 
+    } else {
+      showToast("Logged in as "+phone);
+      loadAllSections();
+    }
+  } catch(err){ showToast(err.message,"danger"); }
+});
+
+// ===== Google Login =====
+const googleProvider = new GoogleAuthProvider();
+document.getElementById("googleLoginBtn").addEventListener("click", async () => {
+  try {
+    const result = await signInWithPopup(auth, googleProvider);
+    const email = result.user.email;
+    if(!allowedEmails.includes(email)){
+      await signOut(auth);
+      showToast("Unauthorized email","danger");
+    } else {
+      showToast("Logged in as "+email);
+      loadAllSections();
+    }
+  } catch(err){ showToast(err.message,"danger"); }
+});
+
+// ===== Auth State =====
+onAuthStateChanged(auth,user=>{
+  if(user){
+    document.getElementById("loginSection").classList.add("d-none");
+    document.getElementById("adminSection").classList.remove("d-none");
+    loadGeneral(); 
+    loadAllSections();
+  } else {
+    document.getElementById("loginSection").classList.remove("d-none");
+    document.getElementById("adminSection").classList.add("d-none");
+  }
+});
+
 document.getElementById("logoutBtn").addEventListener("click",()=>signOut(auth));
 
 // Load general info
