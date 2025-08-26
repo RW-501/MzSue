@@ -301,7 +301,6 @@ async function loadGeneral() {
     if (d.heroImage) document.getElementById("heroPreview").src = d.heroImage;
   }
 }
-loadGeneral();
 
 document.getElementById("generalForm").addEventListener("submit", async e => {
   e.preventDefault();
@@ -621,6 +620,7 @@ document.getElementById("addGalleryBtn").addEventListener("click", ()=>createGal
 const popoverTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="popover"]'));
 popoverTriggerList.map(el => new bootstrap.Popover(el));
 
+loadGeneral();
 // Call loadGallery on page load
 loadGallery();
 </script>
