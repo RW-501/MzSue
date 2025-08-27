@@ -476,14 +476,17 @@ async function saveDynamicSection(containerId, docName) {
   const items = [];
 
   container.querySelectorAll("div").forEach(div => {
-    const textInputs = Array.from(div.querySelectorAll("input[type=text]")).map(i => i.value);
-    const hiddenInputs = Array.from(div.querySelectorAll("input[type=hidden]")).map(i => i.value);
+    const textInputs = Array.from(div.querySelectorAll("input[type=text]")).map(i => i.value.trim());
+    const hiddenInputs = Array.from(div.querySelectorAll("input[type=hidden]")).map(i => i.value.trim());
 
-    // Combine values into an object instead of nested array
-    if (textInputs.some(v => v) || hiddenInputs.some(v => v)) {
+    // Take only first value from each array (no nested arrays)
+    const text = textInputs[0] || "";
+    const file = hiddenInputs[0] || "";
+
+    if (text || file) {
       items.push({
-        texts: textInputs,
-        files: hiddenInputs
+        text,
+        file
       });
     }
   });
