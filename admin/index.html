@@ -521,7 +521,7 @@ async function loadNewsletterSubscribers() {
 
 // Load all sections
 async function loadAllSections() {
-  const sections = ["albums", "videos", "events", "socials", "gallery", "contacts"];
+  const sections = ["albums", "videos", "events", "socials", "gallery"];
 
   for (const sec of sections) {
     if (sec === "contacts") {
@@ -530,12 +530,14 @@ async function loadAllSections() {
       continue; // skip the rest of the loop for contacts
     }
 
+
     const snap = await getDoc(doc(db, "siteContent", sec));
     const items = snap.exists() ? snap.data().items || [] : [];
     const container = document.getElementById(sec + "List");
     container.innerHTML = "";
 
     let placeholders = [], fileIndices = [];
+
     switch (sec) {
       case "albums":
         placeholders = ["Album Title", "Cover Image", "Link"];
@@ -559,8 +561,18 @@ async function loadAllSections() {
         break;
     }
 
-    items.forEach(vals => createInputBlock(container, placeholders, vals, fileIndices));
+    items.forEach(item => {
+      if (sec === "gallery") {
+        // gallery needs array of URLs
+        createGalleryInputBlock(container, item.files || []);
+      } else {
+        createInputBlock(container, placeholders, [...(item.texts || []), ...(item.files || [])], fileIndices);
+      }
+    });
   }
+
+  // Load newsletter subscribers (contacts)
+  await loadNewsletterSubscribers();
 }
 
 
@@ -792,53 +804,6 @@ document.getElementById("galleryForm").addEventListener("submit", e => {
 });
 
 
-async function loadAllSections() {
-  const sections = ["albums", "videos", "events", "socials", "gallery"];
-
-  for (const sec of sections) {
-    const snap = await getDoc(doc(db, "siteContent", sec));
-    const items = snap.exists() ? snap.data().items || [] : [];
-    const container = document.getElementById(sec + "List");
-    container.innerHTML = "";
-
-    let placeholders = [], fileIndices = [];
-
-    switch (sec) {
-      case "albums":
-        placeholders = ["Album Title", "Cover Image", "Link"];
-        fileIndices = [1];
-        break;
-      case "videos":
-        placeholders = ["Video Title", "Embed URL"];
-        fileIndices = [];
-        break;
-      case "events":
-        placeholders = ["Event Name", "Date", "Venue", "Flyer Image"];
-        fileIndices = [3];
-        break;
-      case "socials":
-        placeholders = ["Platform", "URL"];
-        fileIndices = [];
-        break;
-      case "gallery":
-        placeholders = ["Image", "Caption"];
-        fileIndices = [0];
-        break;
-    }
-
-    items.forEach(item => {
-      if (sec === "gallery") {
-        // gallery needs array of URLs
-        createGalleryInputBlock(container, item.files || []);
-      } else {
-        createInputBlock(container, placeholders, [...(item.texts || []), ...(item.files || [])], fileIndices);
-      }
-    });
-  }
-
-  // Load newsletter subscribers (contacts)
-  await loadNewsletterSubscribers();
-}
 
 
 
