@@ -696,32 +696,22 @@ function createGalleryInputBlock(container, existingImages = []) {
 
 // ===== Auto-save Gallery Section =====
 async function autoSave(containerId){ 
-  const sectionsMap = {
-    albums: "albums",
-    videos: "videos",
-    events: "events",
-    socials: "socials",
-    gallery: "gallery"
-  };
-  if(!sectionsMap[containerId]) return;
+  if(containerId !== "gallery") return; // only handle gallery
 
-  const container=document.getElementById(containerId+"List");
-  const items=[];
-  container.querySelectorAll("div.draggable").forEach(div=>{
-    // collect BOTH text + date
-    const vals = Array.from(div.querySelectorAll("input[type=text], input[type=date]"))
-      .map(i => i.value);
+  const container = document.getElementById("galleryList");
+  const items = [];
 
+  container.querySelectorAll("div.draggable").forEach(div => {
     const fileUrls = Array.from(div.querySelectorAll("input[type=hidden]"))
-      .map(i => i.value);
-
-    const merged = vals.concat(fileUrls);
-    if(merged.some(v=>v)) items.push(merged);
+      .map(i => i.value)
+      .filter(v => v); // remove empty
+    if(fileUrls.length) items.push(fileUrls);
   });
 
-  await setDoc(doc(db,"siteContent",sectionsMap[containerId]), {items}, {merge:true});
+  await setDoc(doc(db,"siteContent","gallery"), {items}, {merge:true});
   showToast(containerId+" updated!");
 }
+
 
 
 // ===== Load Gallery Section =====
@@ -828,8 +818,6 @@ document.getElementById("galleryForm").addEventListener("submit", e => {
 const popoverTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="popover"]'));
 popoverTriggerList.map(el => new bootstrap.Popover(el));
 
-// Call loadGallery on page load
-loadGallery();
 </script>
 
 </body>
