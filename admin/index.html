@@ -477,18 +477,20 @@ async function saveDynamicSection(containerId, docName) {
   const container = document.getElementById(containerId + "List");
   const items = [];
 
-  container.querySelectorAll("div").forEach(div => {
-    const textInputs = Array.from(div.querySelectorAll("input[type=text]")).map(i => i.value.trim());
-    const hiddenInputs = Array.from(div.querySelectorAll("input[type=hidden]")).map(i => i.value.trim());
+  container.querySelectorAll("div.draggable").forEach(div => {
+    // collect text + date inputs
+    const textInputs = Array.from(div.querySelectorAll("input[type=text], input[type=date]"))
+      .map(i => i.value.trim());
 
-    // Take only first value from each array (no nested arrays)
-    const text = textInputs[0] || "";
-    const file = hiddenInputs[0] || "";
+    // collect file inputs (hidden)
+    const fileInputs = Array.from(div.querySelectorAll("input[type=hidden]"))
+      .map(i => i.value.trim());
 
-    if (text || file) {
+    if (textInputs.some(v => v) || fileInputs.some(v => v)) {
+      // Save as separate arrays like in loadAllSections
       items.push({
-        text,
-        file
+        texts: textInputs,
+        files: fileInputs
       });
     }
   });
