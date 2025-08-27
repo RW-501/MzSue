@@ -92,6 +92,18 @@ section h2.visible { opacity:1; transform: translateY(0); }
   color: #333; /* dark grey for visibility on white */
   transition: color 0.3s; /* smooth hover effect */
 }
+
+.gallery-card img {
+  height: 250px;       /* fixed height */
+  object-fit: cover;   /* makes sure image fills card nicely */
+  cursor: pointer;     /* indicates clickability */
+  border-radius: 8px;
+  transition: transform 0.3s ease;
+}
+.gallery-card img:hover {
+  transform: scale(1.05);
+}
+
 </style>
 </head>
 <body>
@@ -305,7 +317,6 @@ async function loadContent(){
 
 const rawGallery = gallerySnap.exists() ? gallerySnap.data().items || [] : [];
 
-console.log("🔥 Raw Gallery Data:", rawGallery);
 
 // Normalize each item: take first file as image, first text as caption
 const gallery = rawGallery.map(item => {
@@ -314,16 +325,33 @@ const gallery = rawGallery.map(item => {
   return [file, caption];
 });
 
-console.log("✅ Normalized Gallery Data:", gallery);
 
 renderCards(document.getElementById("galleryContainer"), gallery, g => `
-  <div class="card h-100 shadow-sm">
-    <img src="${g[0]}" alt="${g[1]}" class="card-img-top" loading="lazy">
+  <div class="card h-100 shadow-sm gallery-card">
+    <img src="${g[0]}" 
+         alt="${g[1]}" 
+         class="card-img-top gallery-img" 
+         loading="lazy"
+         data-bs-toggle="modal"
+         data-bs-target="#imageModal"
+         data-img="${g[0]}" 
+         data-caption="${g[1]}">
     <div class="card-body text-center">
       <p class="card-text">${g[1]}</p>
     </div>
   </div>
 `);
+
+// Handle modal content population
+document.addEventListener("click", e => {
+  if (e.target.classList.contains("gallery-img")) {
+    const modalImg = document.getElementById("modalImage");
+    const modalCaption = document.getElementById("modalCaption");
+    modalImg.src = e.target.dataset.img;
+    modalCaption.textContent = e.target.dataset.caption || "";
+  }
+});
+
 
 
   if(data.contactEmail){
