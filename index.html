@@ -114,7 +114,7 @@ section h2.visible { opacity:1; transform: translateY(0); }
 <!-- Navbar -->
 <nav class="navbar navbar-expand-lg navbar-dark fixed-top shadow-sm">
   <div class="container">
-    <a id="navBrand" class="navbar-brand fw-bold" href="#">Artist</a>
+    <a id="navBrand" class="navbar-brand fw-bold" href="#">Mz Su Mac | Official Website</a>
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" 
       data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" 
       aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button>
@@ -289,7 +289,7 @@ async function loadContent(){
   const data = mainSnap.exists()?mainSnap.data():{};
   document.getElementById("heroName").textContent = data.name||"Artist";
   document.getElementById("navBrand").textContent = data.name||"Artist";
-  document.getElementById("footerName").textContent = data.name||"Artist";
+  document.getElementById("footerName").textContent = `${data.name||"Artist"} | Official Website`
   document.title = `${data.name||"Artist"} | Official Website`;
   if(data.tagline) document.getElementById("heroTagline").textContent=data.tagline;
 
