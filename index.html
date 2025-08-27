@@ -337,13 +337,15 @@ const albums = rawAlbums.map(item => {
 
 renderCards(document.getElementById('albumsContainer'), albums, a => `
   <div class="card h-100 shadow-sm album-card">
-    <img src="${a[1]}" alt="${a[0]}" class="card-img-top" loading="lazy">
+    <img src="${a.cover}" alt="${a.title}" class="card-img-top" loading="lazy">
     <div class="card-body text-center">
-      <h5 class="card-title">${a[0]}</h5>
-      ${a[2] ? `<audio controls src="${a[2]}" preload="none"></audio>` : ""}
+      <h5 class="card-title">${a.title}</h5>
+      ${a.audio ? `<audio controls src="${a.audio}" preload="none"></audio>` : ""}
+      ${a.link ? `<a href="${a.link}" class="btn btn-primary mt-2">Listen/Visit</a>` : ""}
     </div>
   </div>
 `);
+
 
 
 // ---- VIDEOS ----
