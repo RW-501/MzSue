@@ -349,18 +349,15 @@ const rawGallery = gallerySnap.exists() ? gallerySnap.data().items || [] : [];
 
 console.log("🔥 Raw Gallery Data:", rawGallery);
 
-// Normalize each item: take first file as image, first text as caption
+// Normalize: expect {file, text}
 const gallery = rawGallery.map(item => {
-  const file = item.files?.[0] || "";
-  const caption = item.texts?.[0] || "";
+  const file = item.file || "";      // single file
+  const caption = item.text || "";   // single caption
   return [file, caption];
 });
 
-
 renderCards(document.getElementById("galleryContainer"), gallery, g => `
-  <div class="card h-100 shadow-sm gallery-card" style="
-    background-color: unset;
-">
+  <div class="card h-100 shadow-sm gallery-card" style="background-color: unset;">
     <img src="${g[0]}" 
          alt="${g[1]}" 
          class="card-img-top gallery-img" 
@@ -374,6 +371,7 @@ renderCards(document.getElementById("galleryContainer"), gallery, g => `
     </div>
   </div>
 `);
+
 
 // Handle modal content population
 document.addEventListener("click", e => {
