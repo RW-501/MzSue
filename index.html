@@ -217,6 +217,24 @@ section h2.visible { opacity:1; transform: translateY(0); }
     Created by <a href="https://rw-501.github.io/Portfolio/" target="_blank" class="text-decoration-none text-primary">Ron W.</a> All rights reserved.
   </div>
 </footer>
+
+
+<!-- Modal -->
+<div class="modal fade" id="imageModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="modalCaption"></h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body text-center">
+        <img id="modalImage" src="" alt="" class="img-fluid rounded shadow">
+      </div>
+    </div>
+  </div>
+</div>
+
+
 <script>
   // Dynamically update the year
   document.getElementById('currentYear').textContent = new Date().getFullYear();
