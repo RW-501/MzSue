@@ -446,10 +446,12 @@ function createInputBlock(container, placeholders, values=[], fileIndices=[]){
       createFileInput(div, ph, values[i]? [values[i]] : [], false);
     } else {
       const input=document.createElement("input");
-      if(ph = "Date"){
-        input.type="date"; 
-      }else{
-        input.type="text"; 
+
+      // ✅ Only Date field becomes date input
+      if (ph === "Date") {
+        input.type = "date"; 
+      } else {
+        input.type = "text"; 
       }
       input.className="form-control"; input.placeholder=ph; input.value=values[i]||"";
       input.addEventListener("input", ()=>autoSave(container.id));
