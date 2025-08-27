@@ -328,10 +328,12 @@ async function loadContent(){
 const rawAlbums = albumsSnap.exists() ? albumsSnap.data().items || [] : [];
 const albums = rawAlbums.map(item => {
   const title = item.texts?.[0] || "";
-  const cover = item.files?.[0] || "";   // cover image
-  const audio = item.files?.[1] || "";   // audio link
-  return [title, cover, audio];
+  const link  = item.texts?.[1] || "";
+  const cover = item.files?.[0] || ""; // first file = cover
+  const audio = item.files?.[1] || ""; // second file = audio (optional)
+  return { title, link, cover, audio }; // return as object for clarity
 });
+
 
 renderCards(document.getElementById('albumsContainer'), albums, a => `
   <div class="card h-100 shadow-sm album-card">
