@@ -288,32 +288,60 @@ async function loadContent(){
       observerCard.observe(col);
     });
   }
+// ---- ALBUMS ----
+const rawAlbums = albumsSnap.exists() ? albumsSnap.data().items || [] : [];
+const albums = rawAlbums.map(item => {
+  const title = item.texts?.[0] || "";
+  const cover = item.files?.[0] || "";   // cover image
+  const audio = item.files?.[1] || "";   // audio link
+  return [title, cover, audio];
+});
 
-  const albums = albumsSnap.exists()?albumsSnap.data().items||[]:[];
-  renderCards(document.getElementById('albumsContainer'), albums, a=>`
-    <div class="card h-100 shadow-sm">
-      <img src="${a[1]}" alt="${a[0]}" class="card-img-top" loading="lazy">
-      <div class="card-body text-center">
-        <h5 class="card-title">${a[0]}</h5>
-        <audio controls src="${a[2]}" preload="none"></audio>
-      </div>
-    </div>`);
+renderCards(document.getElementById('albumsContainer'), albums, a => `
+  <div class="card h-100 shadow-sm album-card">
+    <img src="${a[1]}" alt="${a[0]}" class="card-img-top" loading="lazy">
+    <div class="card-body text-center">
+      <h5 class="card-title">${a[0]}</h5>
+      ${a[2] ? `<audio controls src="${a[2]}" preload="none"></audio>` : ""}
+    </div>
+  </div>
+`);
 
-  const videos = videosSnap.exists()?videosSnap.data().items||[]:[];
-  renderCards(document.getElementById('videosContainer'), videos, v=>`
-    <div class="ratio ratio-16x9 shadow-sm rounded overflow-hidden">
-      <iframe src="${v[1]}" title="${v[0]}" allowfullscreen loading="lazy"></iframe>
-    </div>`);
 
-  const events = eventsSnap.exists()?eventsSnap.data().items||[]:[];
-  renderCards(document.getElementById('eventsContainer'), events, ev=>`
-    <div class="card h-100 shadow-sm">
-      <img src="${ev[3]}" alt="${ev[0]}" class="card-img-top" loading="lazy">
-      <div class="card-body text-center">
-        <h5 class="card-title">${ev[0]}</h5>
-        <p class="card-text">${ev[1]} | ${ev[2]}</p>
-      </div>
-    </div>`);
+// ---- VIDEOS ----
+const rawVideos = videosSnap.exists() ? videosSnap.data().items || [] : [];
+const videos = rawVideos.map(item => {
+  const title = item.texts?.[0] || "";
+  const embed = item.texts?.[1] || "";
+  return [title, embed];
+});
+
+renderCards(document.getElementById('videosContainer'), videos, v => `
+  <div class="ratio ratio-16x9 shadow-sm rounded overflow-hidden video-card">
+    <iframe src="${v[1]}" title="${v[0]}" allowfullscreen loading="lazy"></iframe>
+  </div>
+`);
+
+
+// ---- EVENTS ----
+const rawEvents = eventsSnap.exists() ? eventsSnap.data().items || [] : [];
+const events = rawEvents.map(item => {
+  const name = item.texts?.[0] || "";
+  const date = item.texts?.[1] || "";
+  const venue = item.texts?.[2] || "";
+  const flyer = item.files?.[0] || "";
+  return [name, date, venue, flyer];
+});
+
+renderCards(document.getElementById('eventsContainer'), events, ev => `
+  <div class="card h-100 shadow-sm event-card">
+    <img src="${ev[3]}" alt="${ev[0]}" class="card-img-top" loading="lazy">
+    <div class="card-body text-center">
+      <h5 class="card-title">${ev[0]}</h5>
+      <p class="card-text">${ev[1]} | ${ev[2]}</p>
+    </div>
+  </div>
+`);
 
 const rawGallery = gallerySnap.exists() ? gallerySnap.data().items || [] : [];
 
