@@ -358,7 +358,9 @@ const gallery = rawGallery.map(item => {
 
 
 renderCards(document.getElementById("galleryContainer"), gallery, g => `
-  <div class="card h-100 shadow-sm gallery-card">
+  <div class="card h-100 shadow-sm gallery-card" style="
+    background-color: unset;
+">
     <img src="${g[0]}" 
          alt="${g[1]}" 
          class="card-img-top gallery-img" 
