@@ -402,92 +402,126 @@ function enableDragSort(container){
   });
 }
 
-// ===== File Input Helper (Multi-file support) =====
-function createFileInput(container, placeholder, existingValues=[], multiple=false){
-  const wrapper=document.createElement("div"); wrapper.className="d-flex flex-wrap gap-2 mb-2 draggable";
-  const input=document.createElement("input"); input.type="file"; input.accept="image/*"; input.multiple=multiple; input.className="form-control";
-  const hiddenInputs=[];
+// ===== File Input Helper =====
+function createFileInput(container, placeholder, existingValues = [], multiple = false) {
+  const wrapper = document.createElement("div");
+  wrapper.className = "d-flex flex-wrap gap-2 mb-2 draggable";
 
-  const previewContainer=document.createElement("div"); previewContainer.className="d-flex flex-wrap gap-2";
+  const input = document.createElement("input");
+  input.type = "file";
+  input.accept = "image/*";
+  input.multiple = multiple;
+  input.className = "form-control";
 
-  function addPreview(file,url){
-    const imgWrapper=document.createElement("div"); imgWrapper.style.position="relative";
-    const img=document.createElement("img"); img.src=url; img.style.width="60px"; img.style.height="60px"; img.style.objectFit="cover"; img.style.borderRadius="6px";
-    const removeBtn=document.createElement("button"); removeBtn.type="button"; removeBtn.textContent="×"; removeBtn.style.position="absolute"; removeBtn.style.top="0"; removeBtn.style.right="0"; removeBtn.className="btn btn-sm btn-danger";
-    removeBtn.addEventListener("click", ()=>{ imgWrapper.remove(); hiddenInputs.splice(hiddenInputs.indexOf(url),1); autoSave(container.id); });
-    imgWrapper.append(img,removeBtn); previewContainer.appendChild(imgWrapper);
+  const hiddenInputs = []; // collect hidden inputs for files
+
+  const previewContainer = document.createElement("div");
+  previewContainer.className = "d-flex flex-wrap gap-2";
+
+  function addPreview(file, url) {
+    const imgWrapper = document.createElement("div");
+    imgWrapper.style.position = "relative";
+
+    const img = document.createElement("img");
+    img.src = url;
+    img.style.width = "60px";
+    img.style.height = "60px";
+    img.style.objectFit = "cover";
+    img.style.borderRadius = "6px";
+
+    const hiddenInput = document.createElement("input");
+    hiddenInput.type = "hidden";
+    hiddenInput.value = url;
+    hiddenInputs.push(hiddenInput);
+
+    const removeBtn = document.createElement("button");
+    removeBtn.type = "button";
+    removeBtn.textContent = "×";
+    removeBtn.style.position = "absolute";
+    removeBtn.style.top = "0";
+    removeBtn.style.right = "0";
+    removeBtn.className = "btn btn-sm btn-danger";
+    removeBtn.addEventListener("click", () => {
+      imgWrapper.remove();
+      hiddenInputs.splice(hiddenInputs.indexOf(hiddenInput), 1);
+      autoSave(container.id);
+    });
+
+    imgWrapper.append(img, removeBtn, hiddenInput);
+    previewContainer.appendChild(imgWrapper);
   }
 
-  existingValues.forEach(url=>{ addPreview(null,url); hiddenInputs.push(url); });
+  existingValues.forEach(url => addPreview(null, url));
 
-  input.addEventListener("change", async ()=>{
-    for(const file of input.files){
-      const storageRef=ref(storage, `${container.id}/${file.name}`);
-      await uploadBytes(storageRef,file);
-      const url=await getDownloadURL(storageRef);
-      addPreview(file,url); hiddenInputs.push(url);
+  input.addEventListener("change", async () => {
+    for (const file of input.files) {
+      const storageRef = ref(storage, `${container.id}/${file.name}-${Date.now()}`);
+      await uploadBytes(storageRef, file);
+      const url = await getDownloadURL(storageRef);
+      addPreview(file, url);
       autoSave(container.id);
     }
-    input.value="";
+    input.value = "";
   });
 
-  wrapper.append(input,previewContainer);
+  wrapper.append(input, previewContainer);
   container.appendChild(wrapper);
-  return hiddenInputs;
+
+  return hiddenInputs; // return array for tracking in createInputBlock
 }
 
 // ===== Input Block with optional file input =====
-function createInputBlock(container, placeholders, values=[], fileIndices=[]){
-  const div=document.createElement("div");
-  div.className="mb-2 border p-2 rounded bg-light d-flex gap-2 align-items-start flex-wrap draggable";
+function createInputBlock(container, placeholders, values = [], fileIndices = []) {
+  const div = document.createElement("div");
+  div.className = "mb-2 border p-2 rounded bg-light d-flex gap-2 align-items-start flex-wrap draggable";
 
-  placeholders.forEach((ph,i)=>{
-    if(fileIndices.includes(i)){
-      createFileInput(div, ph, values[i]? [values[i]] : [], false);
+  div.fileInputs = []; // to store hidden file inputs
+
+  placeholders.forEach((ph, i) => {
+    if (fileIndices.includes(i)) {
+      const hiddenInputs = createFileInput(div, ph, values[i] ? [values[i]] : [], false);
+      div.fileInputs.push(...hiddenInputs);
     } else {
-      const input=document.createElement("input");
-
-      // ✅ Only Date field becomes date input
-      if (ph === "Date") {
-        input.type = "date"; 
-      } else {
-        input.type = "text"; 
-      }
-      input.className="form-control"; input.placeholder=ph; input.value=values[i]||"";
-      input.addEventListener("input", ()=>autoSave(container.id));
+      const input = document.createElement("input");
+      input.type = ph === "Date" ? "date" : "text";
+      input.className = "form-control";
+      input.placeholder = ph;
+      input.value = values[i] || "";
+      input.addEventListener("input", () => autoSave(container.id));
       div.appendChild(input);
     }
   });
 
-  if(!fileIndices.length){
-    const removeBtn=document.createElement("button");
-    removeBtn.type="button"; removeBtn.className="btn btn-danger btn-sm"; removeBtn.textContent="Remove";
-    removeBtn.addEventListener("click", ()=>{ div.remove(); autoSave(container.id); });
-    div.appendChild(removeBtn);
-  }
+  const removeBtn = document.createElement("button");
+  removeBtn.type = "button";
+  removeBtn.className = "btn btn-danger btn-sm";
+  removeBtn.textContent = "Remove";
+  removeBtn.addEventListener("click", () => {
+    div.remove();
+    autoSave(container.id);
+  });
+  div.appendChild(removeBtn);
 
   container.appendChild(div);
   enableDragSort(container);
   return div;
 }
 
-
-
+// ===== Save Dynamic Section =====
 async function saveDynamicSection(containerId, docName) {
   const container = document.getElementById(containerId + "List");
   const items = [];
 
   container.querySelectorAll("div.draggable").forEach(div => {
-    // collect text + date inputs
     const textInputs = Array.from(div.querySelectorAll("input[type=text], input[type=date]"))
       .map(i => i.value.trim());
 
-    // collect file inputs (hidden)
-    const fileInputs = Array.from(div.querySelectorAll("input[type=hidden]"))
-      .map(i => i.value.trim());
+    let fileInputs = [];
+    if (div.fileInputs) {
+      fileInputs = div.fileInputs.map(i => i.value.trim());
+    }
 
     if (textInputs.some(v => v) || fileInputs.some(v => v)) {
-      // Save as separate arrays like in loadAllSections
       items.push({
         texts: textInputs,
         files: fileInputs
@@ -498,7 +532,6 @@ async function saveDynamicSection(containerId, docName) {
   await setDoc(doc(db, "siteContent", docName), { items }, { merge: true });
   showToast(containerId + " updated!");
 }
-
 
 
 async function loadNewsletterSubscribers() {
