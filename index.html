@@ -315,6 +315,7 @@ const videos = rawVideos.map(item => {
   const embed = item.texts?.[1] || "";
   return [title, embed];
 });
+console.log("🔥 Raw rawVideos Data:", rawVideos);
 
 renderCards(document.getElementById('videosContainer'), videos, v => `
   <div class="ratio ratio-16x9 shadow-sm rounded overflow-hidden video-card">
@@ -332,6 +333,7 @@ const events = rawEvents.map(item => {
   const flyer = item.files?.[0] || "";
   return [name, date, venue, flyer];
 });
+console.log("🔥 Raw rawEvents Data:", rawEvents);
 
 renderCards(document.getElementById('eventsContainer'), events, ev => `
   <div class="card h-100 shadow-sm event-card">
@@ -345,6 +347,7 @@ renderCards(document.getElementById('eventsContainer'), events, ev => `
 
 const rawGallery = gallerySnap.exists() ? gallerySnap.data().items || [] : [];
 
+console.log("🔥 Raw Gallery Data:", rawGallery);
 
 // Normalize each item: take first file as image, first text as caption
 const gallery = rawGallery.map(item => {
