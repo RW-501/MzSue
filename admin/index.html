@@ -413,10 +413,11 @@ function createFileInput(container, placeholder, existingValues = [], multiple =
   input.multiple = multiple;
   input.className = "form-control";
 
-  const hiddenInputs = []; // collect hidden inputs for files
-
   const previewContainer = document.createElement("div");
   previewContainer.className = "d-flex flex-wrap gap-2";
+
+  // store hidden inputs in the parent div dynamically
+  if (!container.fileInputs) container.fileInputs = [];
 
   function addPreview(file, url) {
     const imgWrapper = document.createElement("div");
@@ -432,7 +433,8 @@ function createFileInput(container, placeholder, existingValues = [], multiple =
     const hiddenInput = document.createElement("input");
     hiddenInput.type = "hidden";
     hiddenInput.value = url;
-    hiddenInputs.push(hiddenInput);
+
+    container.fileInputs.push(hiddenInput); // add dynamically
 
     const removeBtn = document.createElement("button");
     removeBtn.type = "button";
@@ -443,7 +445,7 @@ function createFileInput(container, placeholder, existingValues = [], multiple =
     removeBtn.className = "btn btn-sm btn-danger";
     removeBtn.addEventListener("click", () => {
       imgWrapper.remove();
-      hiddenInputs.splice(hiddenInputs.indexOf(hiddenInput), 1);
+      container.fileInputs.splice(container.fileInputs.indexOf(hiddenInput), 1);
       autoSave(container.id);
     });
 
@@ -467,20 +469,19 @@ function createFileInput(container, placeholder, existingValues = [], multiple =
   wrapper.append(input, previewContainer);
   container.appendChild(wrapper);
 
-  return hiddenInputs; // return array for tracking in createInputBlock
+  return; // now hidden inputs are tracked in container.fileInputs
 }
 
-// ===== Input Block with optional file input =====
+// ===== Input Block =====
 function createInputBlock(container, placeholders, values = [], fileIndices = []) {
   const div = document.createElement("div");
   div.className = "mb-2 border p-2 rounded bg-light d-flex gap-2 align-items-start flex-wrap draggable";
 
-  div.fileInputs = []; // to store hidden file inputs
+  div.fileInputs = []; // dynamic tracking
 
   placeholders.forEach((ph, i) => {
     if (fileIndices.includes(i)) {
-      const hiddenInputs = createFileInput(div, ph, values[i] ? [values[i]] : [], false);
-      div.fileInputs.push(...hiddenInputs);
+      createFileInput(div, ph, values[i] ? [values[i]] : [], false);
     } else {
       const input = document.createElement("input");
       input.type = ph === "Date" ? "date" : "text";
